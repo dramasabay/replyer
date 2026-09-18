@@ -20,25 +20,24 @@ fi
 # If running as root, fix volume ownership and permissions so appuser can access DATA_DIR
 if [ "$(id -u)" = "0" ]; then
     chown -R appuser:appuser "$DATA_DIR" 2>/dev/null || true
-    chmod 700 "$DATA_DIR" 2>/dev/null || true
-    if [ -f "$DATA_DIR/secret.key" ]; then
-        chmod 600 "$DATA_DIR/secret.key" 2>/dev/null || true
-    fi
+    chmod -R 777 "$DATA_DIR" 2>/dev/null || true
 
     if command -v gosu >/dev/null 2>&1; then
         DROP_CMD="gosu appuser"
-    else
+    elif command -v runuser >/dev/null 2>&1; then
         DROP_CMD="runuser -u appuser --"
+    else
+        DROP_CMD=""
     fi
 
     if [ $# -eq 0 ]; then
-        exec $DROP_CMD uvicorn main:app --host 0.0.0.0 --port 8000
+        exec $DROP_CMD python -m uvicorn main:app --host 0.0.0.0 --port 8000
     else
         exec $DROP_CMD "$@"
     fi
 else
     if [ $# -eq 0 ]; then
-        exec uvicorn main:app --host 0.0.0.0 --port 8000
+        exec python -m uvicorn main:app --host 0.0.0.0 --port 8000
     else
         exec "$@"
     fi

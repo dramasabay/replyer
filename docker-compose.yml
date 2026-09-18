@@ -10,15 +10,20 @@ services:
       - backend_data:/app/data
     networks:
       - replyer_net
-    # Not published to the host — only the nginx/frontend container talks to
-    # it, over the internal docker network, at http://backend:8000.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
   frontend:
     build: ./frontend
     container_name: replyer-frontend
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "8087:80"
     networks:

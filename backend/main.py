@@ -1,4 +1,5 @@
 import os
+import asyncio
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, Security, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -140,7 +141,11 @@ async def startup():
     asyncio.create_task(_init_watchers_background())
 
 
-# ---------- Frontend Web UI (Direct Access) ----------
+# ---------- Health Check & Direct Web UI ----------
+@app.get("/health", include_in_schema=False)
+async def health_check():
+    return {"status": "ok"}
+
 frontend_html = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend", "index.html")
 if os.path.exists(frontend_html):
     @app.get("/", include_in_schema=False)
