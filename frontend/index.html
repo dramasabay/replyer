@@ -1610,19 +1610,8 @@
 </div>
 
 <script>
-  // Dynamically resolve backend API address:
-  // - If running on same port as FastAPI (e.g. 8000) or behind reverse proxy (80, 443, 8087), use ""
-  // - If running from a separate static server (e.g. 8080 from python -m http.server, 5500, 3000), target localhost:8000
-  // - If opened via file:// protocol, target localhost:8000
-  const API_BASE = (function() {
-    if (window.API_BASE_OVERRIDE) return window.API_BASE_OVERRIDE;
-    if (window.location.protocol === 'file:') return 'http://localhost:8000';
-    const port = window.location.port;
-    if (port && !['8000', '8087', '80', '443'].includes(port)) {
-      return `http://${window.location.hostname || 'localhost'}:8000`;
-    }
-    return '';
-  })();
+  // In Docker / production, Nginx reverse-proxies all API routes directly from the same origin ("")
+  const API_BASE = window.API_BASE_OVERRIDE || "";
 
   // Robust response JSON parser that prevents "Unexpected token '<'" errors when server returns HTML error pages
   async function safeParseJson(res) {

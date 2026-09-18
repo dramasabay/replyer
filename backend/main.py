@@ -122,9 +122,9 @@ async def require_admin_user(current_user: dict = Depends(get_current_user)) -> 
     return current_user
 
 
-@app.on_event("startup")
-async def startup():
-    db.init_db()
+async def _init_watchers_background():
+    # Allow uvicorn to finish startup and begin answering HTTP requests immediately
+    await asyncio.sleep(0.5)
     for user_id in db.get_all_active_user_ids():
         try:
             await worker.start_watching(user_id)
@@ -132,6 +132,12 @@ async def startup():
             print(f"Failed to start watching user {user_id} at startup: {e}")
     # Start continuous keepalive and auto-reconnect watchdog loop
     asyncio.create_task(worker.start_watchdog())
+
+@app.on_event("startup")
+async def startup():
+    db.init_db()
+    # Launch user watchers in background so server starts accepting requests instantly
+    asyncio.create_task(_init_watchers_background())
 
 
 # ---------- Frontend Web UI (Direct Access) ----------
