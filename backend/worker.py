@@ -135,6 +135,26 @@ def pick_reply_text(raw_reply_text: str) -> str:
     return raw_reply_text
 
 
+def get_message_filename(message) -> str:
+    """Safely extracts attachment filename from a Telegram message if present."""
+    if not message:
+        return ""
+    try:
+        if getattr(message, 'file', None) and getattr(message.file, 'name', None):
+            return message.file.name
+    except Exception:
+        pass
+    try:
+        doc = getattr(message, 'document', None)
+        if doc:
+            for attr in getattr(doc, 'attributes', []):
+                if isinstance(attr, types.DocumentAttributeFilename):
+                    return attr.file_name
+    except Exception:
+        pass
+    return ""
+
+
 def evaluate_rules(rules: list, text: str, sender_id: int, sender_username: str = None, is_mention: bool = False) -> list:
     """Pure rule evaluation function: prioritizes specific rules (sender, mention, keyword)
     over generic catch-all ('all') rules. Returns all matching rules."""
@@ -172,8 +192,13 @@ def evaluate_rules(rules: list, text: str, sender_id: int, sender_username: str 
 
 async def start_watching(user_id: int):
     client = _watching_clients.get(user_id)
-    if client is not None and client.is_connected():
-        return  # already listening on a live connected client
+    if client is not None:
+        try:
+            if client.is_connected():
+                return  # already listening on a live connected client
+        except Exception:
+            pass
+        _watching_clients.pop(user_id, None)
 
     try:
         client = await telegram_manager.get_client(user_id)
@@ -234,6 +259,62 @@ async def start_watching(user_id: int):
 
         # Detect if message is in a group or channel, and if it mentions the user
         is_group_or_channel = bool(getattr(event, 'is_group', False) or getattr(event, 'is_channel', False))
+
+        # SCAM & MALWARE FILE SHIELD: Automatically detect and remove dangerous files (.exe, .zip, .rar, etc.)
+        scam_cfg = db.get_scam_shield(user_id)
+        if scam_cfg and scam_cfg.get("active"):
+            shield_scope = scam_cfg.get("scope", "all")
+            scope_matches = (
+                shield_scope == "all"
+                or (shield_scope == "dm" and not is_group_or_channel)
+                or (shield_scope == "group" and is_group_or_channel)
+            )
+            if scope_matches:
+                filename = get_message_filename(event.message)
+                if filename:
+                    ext_str = scam_cfg.get("extensions") or ".exe, .zip, .rar, .7z, .bat, .scr, .cmd, .msi, .pif, .vbs, .apk"
+                    blacklisted_exts = [e.strip().lower() for e in re.split(r'[\r\n,\s]+', ext_str) if e.strip()]
+                    blacklisted_exts = [e if e.startswith('.') else f".{e}" for e in blacklisted_exts]
+                    fname_lower = filename.lower()
+                    matched_ext = next((e for e in blacklisted_exts if fname_lower.endswith(e)), None)
+                    if matched_ext:
+                        # Dangerous scam attachment intercepted!
+                        print(f"[ScamShield] Intercepted dangerous file '{filename}' with extension '{matched_ext}' in chat {chat_id}")
+                        try:
+                            await event.delete(revoke=True)
+                        except Exception as e_del:
+                            print(f"[ScamShield] event.delete failed: {e_del}, trying client.delete_messages")
+                            try:
+                                await client.delete_messages(chat_id, [event.message.id], revoke=True)
+                            except Exception as e_del2:
+                                print(f"[ScamShield] fallback delete also failed: {e_del2}")
+
+                        if scam_cfg.get("send_warning"):
+                            warning_msg = scam_cfg.get("warning_text") or "⚠️ Dangerous scam/malware attachment removed."
+                            try:
+                                await client.send_message(chat_id, warning_msg)
+                            except Exception:
+                                pass
+
+                        chat_title = None
+                        try:
+                            chat_obj = await event.get_chat()
+                            if chat_obj:
+                                chat_title = getattr(chat_obj, 'title', None) or getattr(chat_obj, 'username', None)
+                        except Exception:
+                            pass
+                        if not chat_title:
+                            chat_title = f"Chat ({chat_id})"
+
+                        db.add_log(
+                            rule_id=None,
+                            message_snippet=f"Auto-removed dangerous scam file: '{filename}'",
+                            user_id=user_id,
+                            chat_name=chat_title,
+                            action_desc=f"🛡️ Blocked Scam File ({matched_ext})"
+                        )
+                        return  # Do not process auto-reply rules for scam files!
+
         is_mention = False
         if is_group_or_channel:
             is_mention = await check_is_mention_or_reply(event, raw_text, owner_id, owner_username)
@@ -443,4 +524,38 @@ async def start_watching(user_id: int):
             db.add_log(rule_id, raw_text, user_id=user_id, chat_name=rule.get("chat_name"))
 
     _watching_clients[user_id] = client
+
+
+async def ensure_watching(user_id: int):
+    """Ensures a user has a healthy, connected Telethon client listening to events."""
+    client = _watching_clients.get(user_id)
+    if client is not None:
+        try:
+            if client.is_connected():
+                return client
+        except Exception:
+            pass
+    await start_watching(user_id)
+    return _watching_clients.get(user_id)
+
+
+async def start_watchdog():
+    """Continuous background watchdog that monitors all active users and auto-reconnects
+    any dropped Telethon listeners every 20 seconds so users never need to reload."""
+    while True:
+        try:
+            await asyncio.sleep(20)
+            active_users = db.get_all_active_user_ids()
+            for uid in active_users:
+                try:
+                    client = _watching_clients.get(uid)
+                    if client is None or not client.is_connected():
+                        print(f"[Watchdog] Auto-reconnecting Telethon watcher for active user {uid}")
+                        await start_watching(uid)
+                except Exception as e:
+                    print(f"[Watchdog] Error checking user {uid}: {e}")
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            print(f"[Watchdog] Loop error: {e}")
 

@@ -398,6 +398,81 @@
     border-color: var(--accent); transform: scale(1.04);
   }
 
+  /* ── Toast Notification Container & Cards ── */
+  .toast-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    max-width: 92vw;
+    width: 380px;
+  }
+  .toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    border-radius: var(--radius-sm);
+    background: rgba(20, 24, 36, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    color: var(--text);
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease;
+    cursor: pointer;
+  }
+  [data-theme="light"] .toast {
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+  .toast.show {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  .toast.success {
+    border-color: rgba(0, 210, 186, 0.5);
+    border-left: 4px solid var(--accent);
+  }
+  .toast.error {
+    border-color: rgba(239, 68, 68, 0.5);
+    border-left: 4px solid var(--danger);
+  }
+  .toast.info {
+    border-color: rgba(99, 102, 241, 0.5);
+    border-left: 4px solid var(--accent2);
+  }
+  .toast-icon {
+    font-size: 17px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .toast-content {
+    flex: 1;
+    word-break: break-word;
+  }
+  .toast-close {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+  }
+
   /* ── Telegram Full Emoji Picker Modal ── */
   .all-emoji-modal-box {
     background: var(--panel); border: 1px solid var(--border);
@@ -1081,6 +1156,74 @@
     <button class="action" style="background:linear-gradient(135deg, var(--accent2), #4338CA);" onclick="saveMentionRule()" data-en="Save Mention Auto-Reply" data-kh="រក្សាទុកការឆ្លើយ Mention">Save Mention Auto-Reply</button>
   </section>
 
+  <!-- SECTION 06: SCAM & MALWARE FILE SHIELD (AUTO-REMOVE .EXE, .ZIP...) -->
+  <section class="block" style="border: 2px solid rgba(239, 68, 68, 0.45);" id="section06Shield">
+    <div class="section-header" style="justify-content:space-between; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="section-label" style="background:var(--danger); color:#fff;">06</span>
+        <h2 class="section-title" data-en="SCAM &amp; MALWARE FILE SHIELD" data-kh="ខែលការពារឯកសារក្លែងបន្លំ &amp; មេរោគ">SCAM &amp; MALWARE FILE SHIELD</h2>
+      </div>
+      <span class="badge danger" style="font-weight:700;">🛡️ <span data-en="Auto-Remove Scams" data-kh="លុបឯកសារគ្រោះថ្នាក់ស្វ័យប្រវត្តិ">Auto-Remove Scams</span></span>
+    </div>
+
+    <div class="callout accent" style="margin-top:10px; border-left-color:var(--danger); background:rgba(239, 68, 68, 0.08);">
+      <strong data-en="🛡️ Automated Protection Against Scammers &amp; Hackers:" data-kh="🛡️ ការពារស្វ័យប្រវត្តពីក្រុមជនឆបោក &amp; Hacker:">🛡️ Automated Protection Against Scammers &amp; Hackers:</strong>
+      <div style="margin-top:4px;" data-en="Scammers frequently send dangerous executable files (.exe, .zip, .rar, .bat, .scr) in Telegram groups, channels, or direct messages. When enabled, this shield automatically deletes these dangerous files immediately upon arrival to protect you and your communities from malware, infostealers, and token loggers." data-kh="ក្រុមជនឆបោកតែងតែផ្ញើឯកសារគ្រោះថ្នាក់ (.exe, .zip, .rar, .bat, .scr) ក្នុងក្រុម ប៉ុស្តិ៍ ឬឆាតផ្ទាល់ខ្លួន។ នៅពេលបើកដំណើរការ ខែលនេះនឹងលុបឯកសារទាំងនេះចោលភ្លាមៗដោយស្វ័យប្រវត្តិ ដើម្បីការពារអ្នក និងសហគមន៍ពីមេរោគ និងការលួចទិន្នន័យ។">Scammers frequently send dangerous executable files (.exe, .zip, .rar, .bat, .scr) in Telegram groups, channels, or direct messages. When enabled, this shield automatically deletes these dangerous files immediately upon arrival to protect you and your communities from malware, infostealers, and token loggers.</div>
+    </div>
+
+    <div class="switch-row">
+      <div>
+        <strong data-en="Enable Scam File Auto-Removal Shield" data-kh="បើកខែលលុបឯកសារគ្រោះថ្នាក់ស្វ័យប្រវត្តិ">Enable Scam File Auto-Removal Shield</strong>
+        <div style="font-size:12px; color:var(--text-dim);" data-en="Automatically deletes messages containing dangerous file extensions (.exe, .zip, etc.)" data-kh="លុបសារដែលមានភ្ជាប់ឯកសារគ្រោះថ្នាក់ (.exe, .zip, ល.) ដោយស្វ័យប្រវត្តិ">Automatically deletes messages containing dangerous file extensions (.exe, .zip, etc.)</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="scamShieldActive" onchange="toggleScamShieldActive(this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="field" style="margin-top:14px;">
+      <label data-en="Protection Scope" data-kh="វិសាលភាពការពារ">Protection Scope</label>
+      <select id="scamShieldScope" style="width:100%;">
+        <option value="all" data-en="🌐 All Chats (Groups, Channels &amp; Private DMs)" data-kh="🌐 គ្រប់ឆាតទាំងអស់ (ក្រុម ប៉ុស្តិ៍ &amp; ឆាតផ្ទាល់ខ្លួន)">🌐 All Chats (Groups, Channels &amp; Private DMs)</option>
+        <option value="dm" data-en="👤 Private 1-on-1 DMs Only" data-kh="👤 ឆាតផ្ទាល់ខ្លួន 1-ទល់-1 ប៉ុណ្ណោះ">👤 Private 1-on-1 DMs Only</option>
+        <option value="group" data-en="👥 Groups &amp; Channels Only" data-kh="👥 ក្រុម &amp; ប៉ុស្តិ៍ប៉ុណ្ណោះ">👥 Groups &amp; Channels Only</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label data-en="Dangerous File Extensions to Auto-Remove (Click to toggle or type below):" data-kh="កន្ទុយឯកសារគ្រោះថ្នាក់ដែលត្រូវលុប (ចុចដើម្បីជ្រើស ឬវាយបញ្ចូលខាងក្រោម):">Dangerous File Extensions to Auto-Remove (Click to toggle or type below):</label>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;" id="shieldExtensionChips">
+        <button type="button" class="chip active" onclick="toggleShieldExt('.exe', this)">.exe</button>
+        <button type="button" class="chip active" onclick="toggleShieldExt('.zip', this)">.zip</button>
+        <button type="button" class="chip active" onclick="toggleShieldExt('.rar', this)">.rar</button>
+        <button type="button" class="chip active" onclick="toggleShieldExt('.7z', this)">.7z</button>
+        <button type="button" class="chip active" onclick="toggleShieldExt('.bat', this)">.bat</button>
+        <button type="button" class="chip active" onclick="toggleShieldExt('.scr', this)">.scr</button>
+        <button type="button" class="chip active" onclick="toggleShieldExt('.cmd', this)">.cmd</button>
+        <button type="button" class="chip active" onclick="toggleShieldExt('.msi', this)">.msi</button>
+        <button type="button" class="chip active" onclick="toggleShieldExt('.pif', this)">.pif</button>
+        <button type="button" class="chip active" onclick="toggleShieldExt('.vbs', this)">.vbs</button>
+        <button type="button" class="chip active" onclick="toggleShieldExt('.apk', this)">.apk</button>
+        <button type="button" class="chip active" onclick="toggleShieldExt('.iso', this)">.iso</button>
+      </div>
+      <input type="text" id="scamShieldExtensions" value=".exe, .zip, .rar, .7z, .bat, .scr, .cmd, .msi, .pif, .vbs, .apk, .iso" placeholder=".exe, .zip, .rar, .bat..." oninput="syncShieldChips()">
+      <div style="font-size:12px; color:var(--text-dim); margin-top:4px;" data-en="Comma or space separated. Any file sent matching these extensions will be auto-deleted immediately." data-kh="បំបែកដោយសញ្ញាក្បៀស ឬដកឃ្លា។ រាល់ឯកសារដែលត្រូវនឹងកន្ទុយទាំងនេះនឹងត្រូវលុបចោលភ្លាមៗ។">Comma or space separated. Any file sent matching these extensions will be auto-deleted immediately.</div>
+    </div>
+
+    <div class="field">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+        <input type="checkbox" id="scamShieldSendWarning" style="width:18px !important; height:18px !important; accent-color:var(--danger);" onchange="document.getElementById('scamShieldWarningField').style.display = this.checked ? 'block' : 'none'">
+        <label for="scamShieldSendWarning" style="margin:0; font-size:13px; font-weight:600; cursor:pointer;" data-en="Send auto-warning message after removing scam file" data-kh="ផ្ញើសារព្រមានស្វ័យប្រវត្តិបន្ទាប់ពីលុបឯកសារក្លែងបន្លំ">Send auto-warning message after removing scam file</label>
+      </div>
+      <div id="scamShieldWarningField" style="display:none; margin-top:8px;">
+        <textarea id="scamShieldWarningText" rows="2" placeholder="⚠️ Dangerous scam/malware attachment removed. | ⚠️ ឯកសារគ្រោះថ្នាក់ត្រូវបានលុបចេញ។">⚠️ Suspicious or dangerous attachment (.exe/.zip) was automatically removed for security.</textarea>
+      </div>
+    </div>
+
+    <button class="action" style="background:linear-gradient(135deg, var(--danger), #B91C1C);" onclick="saveScamShield()" data-en="Save Scam File Shield Settings" data-kh="រក្សាទុកការកំណត់ខែលការពារ">Save Scam File Shield Settings</button>
+  </section>
+
   <!-- RECENT ACTIVITY LOGS -->
   <section class="block">
     <div class="section-header">
@@ -1238,10 +1381,11 @@
         </div>
       </div>
 
-      <div class="stats-grid" style="grid-template-columns:repeat(3, 1fr); margin-bottom:20px;">
+      <div class="stats-grid" style="grid-template-columns:repeat(4, 1fr); margin-bottom:20px;">
         <div class="stat-cell"><div class="val" id="statRules">—</div><div class="lbl" data-en="ACTIVE RULES" data-kh="ច្បាប់សកម្ម">ACTIVE RULES</div></div>
         <div class="stat-cell"><div class="val" id="statAway">—</div><div class="lbl" data-en="AWAY REPLY" data-kh="AWAY REPLY">AWAY REPLY</div></div>
         <div class="stat-cell"><div class="val" id="statMention">—</div><div class="lbl" data-en="MENTION REPLY" data-kh="MENTION REPLY">MENTION REPLY</div></div>
+        <div class="stat-cell"><div class="val" id="statShield" style="color:var(--danger);">—</div><div class="lbl" data-en="SCAM SHIELD" data-kh="ខែលការពារ">SCAM SHIELD</div></div>
       </div>
 
       <button class="danger" style="width:100%;" onclick="logout()" data-en="Log Out" data-kh="ចាកចេញ">Log Out</button>
@@ -1483,6 +1627,37 @@
   document.getElementById('flagUS').innerHTML = FLAG_US;
   document.getElementById('flagKH').innerHTML = FLAG_KH;
 
+  // ---------- Modern Floating Toast Notification System ----------
+  function showToast(message, type = 'success', duration = 3500) {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toastContainer';
+      container.className = 'toast-container';
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    const icon = type === 'success' ? '✓' : (type === 'error' ? '✕' : 'ℹ️');
+    const iconColor = type === 'success' ? 'var(--accent)' : (type === 'error' ? 'var(--danger)' : 'var(--accent2)');
+    toast.innerHTML = `
+      <span class="toast-icon" style="color:${iconColor}; font-weight:900;">${icon}</span>
+      <span class="toast-content">${escapeHtml(message)}</span>
+      <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+    `;
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    const timer = setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+    toast.onclick = () => {
+      clearTimeout(timer);
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    };
+  }
+
   // ---------- Authenticated API Fetch Wrapper ----------
   async function apiFetch(url, options = {}) {
     options.headers = options.headers || {};
@@ -1494,7 +1669,7 @@
       // Session expired or token invalid
       setLoggedOut();
       goTo('login');
-      alert(currentLang === 'kh' ? 'សម័យកាលរបស់អ្នកបានផុតកំណត់។ សូមចូលម្តងទៀត។' : 'Your session has expired. Please log in again.');
+      showToast(currentLang === 'kh' ? 'សម័យកាលរបស់អ្នកបានផុតកំណត់។ សូមចូលម្តងទៀត។' : 'Your session has expired. Please log in again.', 'error');
       throw new Error("Unauthorized");
     }
     return res;
@@ -1586,6 +1761,7 @@
       loadRules();
       loadDefaultRule();
       loadMentionRule();
+      loadScamShield();
       loadLogs();
       loadStats();
       if (isAdmin) {
@@ -1950,10 +2126,10 @@
       const selected = document.getElementById('senderSelect').value;
       const custom = document.getElementById('customSenderId').value.trim();
       triggerValue = custom || selected || null;
-      if (!triggerValue) { alert(currentLang === 'kh' ? 'សូមជ្រើស ឬបញ្ចូល ID អ្នកផ្ញើ' : 'Please choose or type a sender ID'); return; }
+      if (!triggerValue) { showToast(currentLang === 'kh' ? 'សូមជ្រើស ឬបញ្ចូល ID អ្នកផ្ញើ' : 'Please choose or type a sender ID', 'error'); return; }
     } else if (triggerType === 'keyword') {
       triggerValue = document.getElementById('keyword').value.trim();
-      if (!triggerValue) { alert(currentLang === 'kh' ? 'សូមបញ្ចូលពាក្យគន្លឹះ' : 'Please enter keywords'); return; }
+      if (!triggerValue) { showToast(currentLang === 'kh' ? 'សូមបញ្ចូលពាក្យគន្លឹះ' : 'Please enter keywords', 'error'); return; }
     } else if (triggerType === 'mention') {
       triggerValue = null;
     }
@@ -1961,7 +2137,7 @@
     const replyText = document.getElementById('replyText').value.trim() || null;
     const reactionEmoji = document.getElementById('reactionEmoji').value.trim() || null;
     if (!replyText && !reactionEmoji) {
-      alert(currentLang === 'kh' ? 'សូមកំណត់សារឆ្លើយតប ឬ Emoji ប្រតិកម្ម' : 'Set a reply text, a reaction, or both.');
+      showToast(currentLang === 'kh' ? 'សូមកំណត់សារឆ្លើយតប ឬ Emoji ប្រតិកម្ម' : 'Set a reply text, a reaction, or both.', 'error');
       return;
     }
 
@@ -2004,7 +2180,7 @@
         body: JSON.stringify(payload)
       });
       if (res.ok) {
-        alert(currentLang === 'kh' ? 'ច្បាប់ត្រូវបានបង្កើតដោយជោគជ័យ!' : 'Rule created successfully!');
+        showToast(currentLang === 'kh' ? '✓ ច្បាប់ត្រូវបានបង្កើតដោយជោគជ័យ!' : '✓ Rule created successfully!', 'success');
         document.getElementById('replyText').value = '';
         document.getElementById('keyword').value = '';
         selectEmoji('');
@@ -2013,38 +2189,82 @@
         loadStats();
       } else {
         const err = await res.json();
-        alert(err.detail || 'Failed to create rule');
+        showToast(err.detail || 'Failed to create rule', 'error');
       }
-    } catch(e) { alert(e.message); }
+    } catch(e) { showToast(e.message, 'error'); }
   }
 
   async function loadRules() {
     if (!userId) return;
     try {
-      const [rulesRes, mentionRes] = await Promise.all([
+      const [rulesRes, mentionRes, scamRes] = await Promise.all([
         apiFetch(`${API_BASE}/users/${userId}/rules`),
-        apiFetch(`${API_BASE}/users/${userId}/mention-rule`).catch(() => null)
+        apiFetch(`${API_BASE}/users/${userId}/mention-rule`).catch(() => null),
+        apiFetch(`${API_BASE}/users/${userId}/scam-shield`).catch(() => null)
       ]);
       const rules = await rulesRes.json();
       let mentionRule = null;
       if (mentionRes && mentionRes.ok) {
         mentionRule = await mentionRes.json();
       }
-      renderRules(rules, mentionRule);
+      let scamShield = null;
+      if (scamRes && scamRes.ok) {
+        scamShield = await scamRes.json();
+      }
+      renderRules(rules, mentionRule, scamShield);
       loadLogs();
       loadStats();
     } catch(e) { console.error(e); }
   }
 
-  function renderRules(rules, mentionRule) {
+  function renderRules(rules, mentionRule, scamShield) {
     const el = document.getElementById('rulesList');
     const hasMentionTask = mentionRule && (mentionRule.reply_text || mentionRule.reaction_emoji || mentionRule.active);
-    const totalCount = rules.length + (hasMentionTask ? 1 : 0);
+    const hasScamTask = scamShield && scamShield.active;
+    const totalCount = rules.length + (hasMentionTask ? 1 : 0) + (hasScamTask ? 1 : 0);
     document.getElementById('rulesCountBadge').textContent = totalCount;
     el.innerHTML = '';
-    if (!rules.length && !hasMentionTask) {
+    if (!rules.length && !hasMentionTask && !hasScamTask) {
       el.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-dim);">${currentLang === 'kh' ? 'មិនទាន់មានច្បាប់នៅឡើយទេ។' : 'No rules created yet.'}</div>`;
       return;
+    }
+
+    // Section 06: Scam & Malware File Shield task card (if active)
+    if (hasScamTask) {
+      const sCard = document.createElement('div');
+      sCard.className = 'rule-card active-rule';
+      sCard.style.borderLeft = '4px solid var(--danger)';
+      sCard.style.background = 'rgba(239, 68, 68, 0.08)';
+
+      const scopeText = scamShield.scope === 'dm' ? '👤 DMs Only' : (scamShield.scope === 'group' ? '👥 Groups Only' : '🌐 All Chats');
+      const extList = (scamShield.extensions || '.exe, .zip').split(/[\s,]+/).filter(Boolean).slice(0, 6).join(', ');
+
+      sCard.innerHTML = `
+        <div class="rule-card-header">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <div class="rule-chat">🛡️ ${currentLang === 'kh' ? 'ខែលការពារឯកសារមេរោគ (Scam Shield)' : 'Scam & Malware File Shield'}</div>
+              <span class="badge danger" style="font-weight:700; font-size:11px;">ACTIVE SHIELD TASK</span>
+            </div>
+            <div class="rule-meta" style="margin-top:6px;">
+              <span class="badge" style="background:rgba(239, 68, 68, 0.22); color:#fca5a5;">Scope: ${escapeHtml(scopeText)}</span>
+              <span class="badge muted">Auto-Delete: ${escapeHtml(extList)}...</span>
+              ${scamShield.send_warning ? '<span class="badge muted">Warning Msg: ON</span>' : ''}
+            </div>
+          </div>
+          <label class="switch" title="Toggle Scam File Shield">
+            <input type="checkbox" checked onchange="toggleScamShieldActive(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="rule-body" style="margin-top:8px; font-size:12.5px; color:var(--text-dim);">
+          ${currentLang === 'kh' ? 'លុបសារឯកសារគ្រោះថ្នាក់ (.exe, .zip, .rar...) ដោយស្វ័យប្រវត្តិកុំឱ្យឆ្លងមេរោគ' : 'Actively intercepting and auto-deleting dangerous scam files (.exe, .zip, .rar...) upon arrival.'}
+        </div>
+        <div class="rule-actions" style="margin-top:10px;">
+          <button class="secondary" style="font-size:12px; padding:5px 12px;" onclick="scrollToSection06()" data-en="⚙️ Edit in Section 06" data-kh="⚙️ កែប្រែក្នុងផ្នែក 06">⚙️ Edit in Section 06</button>
+        </div>
+      `;
+      el.appendChild(sCard);
     }
 
     // Section 05: Group Mention Auto-Reply rendered as a primary task
@@ -2127,13 +2347,14 @@
       const res = await apiFetch(`${API_BASE}/users/${userId}/mention-rule/active?active=${active}`, { method: 'PATCH' });
       if (res.ok) {
         document.getElementById('mentionRuleActive').checked = active;
+        showToast(active ? (currentLang === 'kh' ? '✓ បានបើកការឆ្លើយ Mention!' : '✓ Mention task enabled') : (currentLang === 'kh' ? 'បានបិទការឆ្លើយ Mention' : 'Mention task paused'), 'info');
         loadRules();
         loadStats();
       } else {
         const err = await res.json();
-        alert(err.detail || 'Failed to toggle mention task');
+        showToast(err.detail || 'Failed to toggle mention task', 'error');
       }
-    } catch(e) { console.error(e); }
+    } catch(e) { showToast(e.message, 'error'); }
   }
 
   function scrollToSection05() {
@@ -2146,17 +2367,19 @@
   async function toggleRuleActive(ruleId, active) {
     try {
       await apiFetch(`${API_BASE}/rules/${ruleId}/active?active=${active}`, { method: 'PATCH' });
+      showToast(active ? (currentLang === 'kh' ? '✓ បានបើកច្បាប់!' : '✓ Rule activated') : (currentLang === 'kh' ? 'បានបិទច្បាប់' : 'Rule paused'), 'info');
       loadStats();
-    } catch(e) { console.error(e); }
+    } catch(e) { showToast(e.message, 'error'); }
   }
 
   async function deleteRule(ruleId) {
     if (!confirm(currentLang === 'kh' ? 'តើអ្នកប្រាកដជាចង់លុបច្បាប់នេះទេ?' : 'Delete this rule?')) return;
     try {
       await apiFetch(`${API_BASE}/rules/${ruleId}`, { method: 'DELETE' });
+      showToast(currentLang === 'kh' ? '✓ បានលុបច្បាប់ជោគជ័យ!' : '✓ Rule deleted!', 'success');
       loadRules();
       loadStats();
-    } catch(e) { console.error(e); }
+    } catch(e) { showToast(e.message, 'error'); }
   }
 
   // ---------- Section 04: Away / Default Rule ----------
@@ -2189,12 +2412,12 @@
         body: JSON.stringify({ active, reply_text, reaction_emoji, delay_seconds })
       });
       if (res.ok) {
-        alert(currentLang === 'kh' ? 'ការឆ្លើយ DM Away ត្រូវបានរក្សាទុកជោគជ័យ!' : 'DM Away reply saved successfully!');
+        showToast(currentLang === 'kh' ? '✓ ការឆ្លើយ DM Away ត្រូវបានរក្សាទុកជោគជ័យ!' : '✓ DM Away reply saved successfully!', 'success');
         loadStats();
       } else {
-        alert('Failed to save default rule');
+        showToast('Failed to save default rule', 'error');
       }
-    } catch(e) { alert(e.message); }
+    } catch(e) { showToast(e.message, 'error'); }
   }
 
   // ---------- Section 05: Group & Channel Mention Rule ----------
@@ -2406,14 +2629,14 @@
     const cooldown_seconds = parseInt(document.getElementById('mentionCooldown').value) || 0;
 
     if (active && !reply_text && !reaction_emoji) {
-      alert(currentLang === 'kh' ? 'សូមកំណត់សារឆ្លើយតប ឬ Emoji ប្រតិកម្ម (យ៉ាងហោចណាស់មួយ)' : 'Set a reply message, a reaction emoji, or both.');
+      showToast(currentLang === 'kh' ? 'សូមកំណត់សារឆ្លើយតប ឬ Emoji ប្រតិកម្ម (យ៉ាងហោចណាស់មួយ)' : 'Set a reply message, a reaction emoji, or both.', 'error');
       return;
     }
 
     let target_chats = null;
     if (!isMentionGlobal) {
       if (mentionSelectedChatIds.size === 0) {
-        alert(currentLang === 'kh' ? 'សូមជ្រើសរើសក្រុម ឬប៉ុស្តិ៍យ៉ាងហោចណាស់ 1 ឬជ្រើសរើស "All Groups & Channels (Global)"' : 'Please select at least one group/channel, or choose "All Groups & Channels (Global)".');
+        showToast(currentLang === 'kh' ? 'សូមជ្រើសរើសក្រុម ឬប៉ុស្តិ៍យ៉ាងហោចណាស់ 1 ឬជ្រើសរើស "All Groups & Channels (Global)"' : 'Please select at least one group/channel, or choose "All Groups & Channels (Global)".', 'error');
         return;
       }
       target_chats = Array.from(mentionSelectedChatIds);
@@ -2426,14 +2649,129 @@
         body: JSON.stringify({ active, reply_text, reaction_emoji, delay_seconds, cooldown_seconds, target_chats })
       });
       if (res.ok) {
-        alert(currentLang === 'kh' ? 'ការឆ្លើយ Group Mention ត្រូវបានរក្សាទុកជោគជ័យ!' : 'Group Mention auto-reply saved successfully!');
+        showToast(currentLang === 'kh' ? '✓ ការឆ្លើយ Group Mention ត្រូវបានរក្សាទុកជោគជ័យ!' : '✓ Group Mention auto-reply saved successfully!', 'success');
         loadRules();
         loadStats();
       } else {
-        const err = await res.json();
-        alert(err.detail || 'Failed to save mention rule');
+        const err = await res.json().catch(() => ({}));
+        showToast(err.detail || 'Failed to save mention rule', 'error');
       }
-    } catch(e) { alert(e.message); }
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  // ---------- Section 06: Scam & Malware File Shield ----------
+  async function loadScamShield() {
+    if (!userId) return;
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/scam-shield`);
+      if (res.ok) {
+        const s = await res.json();
+        if (s) {
+          const activeEl = document.getElementById('scamShieldActive');
+          if (activeEl) activeEl.checked = !!s.active;
+          const scopeEl = document.getElementById('scamShieldScope');
+          if (scopeEl && s.scope) scopeEl.value = s.scope;
+          const extEl = document.getElementById('scamShieldExtensions');
+          if (extEl && s.extensions) {
+            extEl.value = s.extensions;
+            syncShieldChips();
+          }
+          const warnCheck = document.getElementById('scamShieldSendWarning');
+          if (warnCheck) {
+            warnCheck.checked = !!s.send_warning;
+            const wf = document.getElementById('scamShieldWarningField');
+            if (wf) wf.style.display = s.send_warning ? 'block' : 'none';
+          }
+          const warnText = document.getElementById('scamShieldWarningText');
+          if (warnText && s.warning_text) warnText.value = s.warning_text;
+        }
+      }
+    } catch(e) { console.error("loadScamShield error:", e); }
+  }
+
+  function syncShieldChips() {
+    const inputEl = document.getElementById('scamShieldExtensions');
+    if (!inputEl) return;
+    const val = inputEl.value.toLowerCase();
+    const chips = document.querySelectorAll('#shieldExtensionChips .chip');
+    chips.forEach(chip => {
+      const ext = chip.textContent.trim().toLowerCase();
+      if (val.includes(ext)) {
+        chip.classList.add('active');
+      } else {
+        chip.classList.remove('active');
+      }
+    });
+  }
+
+  function toggleShieldExt(ext, btn) {
+    const input = document.getElementById('scamShieldExtensions');
+    if (!input) return;
+    let exts = input.value.split(/[\s,]+/).filter(Boolean);
+    const lowerExt = ext.toLowerCase();
+    const idx = exts.findIndex(e => e.toLowerCase() === lowerExt);
+    if (idx >= 0) {
+      exts.splice(idx, 1);
+      btn.classList.remove('active');
+    } else {
+      exts.push(ext);
+      btn.classList.add('active');
+    }
+    input.value = exts.join(', ');
+  }
+
+  async function saveScamShield() {
+    if (!userId) return;
+    const active = document.getElementById('scamShieldActive').checked;
+    const scope = document.getElementById('scamShieldScope').value;
+    const extensions = document.getElementById('scamShieldExtensions').value.trim();
+    const send_warning = document.getElementById('scamShieldSendWarning').checked;
+    const warning_text = document.getElementById('scamShieldWarningText').value.trim() || null;
+
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/scam-shield`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active, scope, extensions, send_warning, warning_text })
+      });
+      if (res.ok) {
+        showToast(currentLang === 'kh' ? '✓ ការកំណត់ខែលការពារត្រូវបានរក្សាទុកជោគជ័យ!' : '✓ Scam File Shield settings saved successfully!', 'success');
+        loadRules();
+        loadStats();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showToast(err.detail || 'Failed to save scam shield settings', 'error');
+      }
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function toggleScamShieldActive(active) {
+    if (!userId) return;
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/scam-shield/active?active=${active}`, {
+        method: 'PATCH'
+      });
+      if (res.ok) {
+        const shieldActiveCheck = document.getElementById('scamShieldActive');
+        if (shieldActiveCheck) shieldActiveCheck.checked = active;
+        showToast(active ? (currentLang === 'kh' ? '✓ បានបើកខែលការពារឯកសារមេរោគ!' : '✓ Scam File Shield Activated!') : (currentLang === 'kh' ? '✓ បានបិទខែលការពារ' : '✓ Scam File Shield Deactivated'), 'info');
+        loadRules();
+        loadStats();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showToast(err.detail || 'Failed to toggle scam shield', 'error');
+      }
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  function scrollToSection06() {
+    const sec = document.getElementById('section06Shield');
+    if (sec) {
+      sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      sec.style.transition = 'box-shadow 0.3s ease';
+      sec.style.boxShadow = '0 0 0 4px var(--danger)';
+      setTimeout(() => { sec.style.boxShadow = ''; }, 1600);
+    }
   }
 
   // ---------- Telegram Full Emoji Library & Controller ----------
@@ -2710,11 +3048,12 @@
       });
       if (res.ok) {
         closeEditModal();
+        showToast(currentLang === 'kh' ? '✓ ច្បាប់ត្រូវបានកែប្រែជោគជ័យ!' : '✓ Rule updated successfully!', 'success');
         loadRules();
       } else {
-        alert('Failed to update rule');
+        showToast('Failed to update rule', 'error');
       }
-    } catch(e) { alert(e.message); }
+    } catch(e) { showToast(e.message, 'error'); }
   }
 
   // ---------- Logs & Stats ----------
@@ -2753,6 +3092,8 @@
       document.getElementById('statAway').textContent = s.away_reply_on ? 'ON' : 'OFF';
       const mEl = document.getElementById('statMention');
       if (mEl) mEl.textContent = s.mention_reply_on ? 'ON' : 'OFF';
+      const sEl = document.getElementById('statShield');
+      if (sEl) sEl.textContent = s.scam_shield_on ? 'ON' : 'OFF';
     } catch(e) { console.error(e); }
   }
 
@@ -2812,11 +3153,12 @@
         body: JSON.stringify({ is_approved: approve })
       });
       if (res.ok) {
+        showToast(approve ? (currentLang === 'kh' ? '✓ បានអនុម័តអ្នកប្រើប្រាស់' : '✓ User approved') : (currentLang === 'kh' ? '✓ បានផ្អាកអ្នកប្រើប្រាស់' : '✓ User blocked'), 'info');
         loadAdminUsers();
       } else {
-        alert("Failed to update user approval status");
+        showToast("Failed to update user approval status", 'error');
       }
-    } catch(e) { alert(e.message); }
+    } catch(e) { showToast(e.message, 'error'); }
   }
 
   // Initial Boot

@@ -106,6 +106,8 @@ async def startup():
             await worker.start_watching(user_id)
         except Exception as e:
             print(f"Failed to start watching user {user_id} at startup: {e}")
+    # Start continuous keepalive and auto-reconnect watchdog loop
+    asyncio.create_task(worker.start_watchdog())
 
 
 # ---------- Auth (Telegram login) ----------
@@ -517,14 +519,73 @@ async def read_mention_rule(user_id: int, current_user: dict = Depends(get_curre
     return rule or {}
 
 
+# ---------- Scam & Malware File Shield ----------
+
+class ScamShieldBody(BaseModel):
+    active: bool = True
+    extensions: Optional[str] = ".exe, .zip, .rar, .7z, .bat, .scr, .cmd, .msi, .pif, .vbs, .apk"
+    scope: Optional[str] = "all"
+    send_warning: Optional[bool] = False
+    warning_text: Optional[str] = "⚠️ Dangerous scam/malware attachment removed."
+
+
+@app.post("/users/{user_id}/scam-shield")
+async def save_scam_shield_endpoint(user_id: int, body: ScamShieldBody, current_user: dict = Depends(get_current_user)):
+    if current_user["id"] != user_id:
+        raise HTTPException(status_code=403, detail="Forbidden.")
+    db.upsert_scam_shield(
+        user_id=user_id,
+        active=body.active,
+        extensions=body.extensions,
+        scope=body.scope or "all",
+        send_warning=bool(body.send_warning),
+        warning_text=body.warning_text,
+    )
+    if body.active:
+        await worker.start_watching(user_id)
+    return {"status": "ok"}
+
+
+@app.patch("/users/{user_id}/scam-shield/active")
+async def toggle_scam_shield_active_endpoint(user_id: int, active: bool, current_user: dict = Depends(get_current_user)):
+    if current_user["id"] != user_id:
+        raise HTTPException(status_code=403, detail="Forbidden.")
+    current = db.get_scam_shield(user_id)
+    db.upsert_scam_shield(
+        user_id=user_id,
+        active=active,
+        extensions=current.get("extensions"),
+        scope=current.get("scope", "all"),
+        send_warning=current.get("send_warning", False),
+        warning_text=current.get("warning_text"),
+    )
+    if active:
+        await worker.start_watching(user_id)
+    return {"status": "ok", "active": active}
+
+
+@app.get("/users/{user_id}/scam-shield")
+async def read_scam_shield_endpoint(user_id: int, current_user: dict = Depends(get_current_user)):
+    if current_user["id"] != user_id:
+        raise HTTPException(status_code=403, detail="Forbidden.")
+    return db.get_scam_shield(user_id)
+
+
 @app.get("/users/{user_id}/stats")
 async def get_stats(user_id: int, current_user: dict = Depends(get_current_user)):
     if current_user["id"] != user_id:
         raise HTTPException(status_code=403, detail="Forbidden.")
+    # Automatic keepalive: ensures worker is actively watching on every stats refresh
+    try:
+        await worker.ensure_watching(user_id)
+    except Exception:
+        pass
+
     rules = db.list_rules(user_id)
     logs = db.list_logs(user_id, limit=1000)
     default = db.get_default_rule(user_id)
     mention = db.get_mention_rule(user_id)
+    scam_shield = db.get_scam_shield(user_id)
     active_cnt = len([r for r in rules if r.get("active")])
     return {
         "active_rules": active_cnt,
@@ -533,6 +594,7 @@ async def get_stats(user_id: int, current_user: dict = Depends(get_current_user)
         "total_replies_sent": len(logs),
         "away_reply_on": bool(default and default.get("active")),
         "mention_reply_on": bool(mention and mention.get("active")),
+        "scam_shield_on": bool(scam_shield and scam_shield.get("active")),
     }
 
 

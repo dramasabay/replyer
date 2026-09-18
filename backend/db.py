@@ -142,6 +142,20 @@ def init_db():
     if "action_desc" not in log_cols:
         c.execute("ALTER TABLE logs ADD COLUMN action_desc TEXT")
 
+    # Scam & Malware File Shield Settings
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS scam_shield_settings (
+        user_id INTEGER PRIMARY KEY,
+        active INTEGER DEFAULT 0,
+        extensions TEXT DEFAULT '.exe, .zip, .rar, .7z, .bat, .scr, .cmd, .msi, .pif, .vbs, .apk',
+        scope TEXT DEFAULT 'all',
+        send_warning INTEGER DEFAULT 0,
+        warning_text TEXT,
+        updated_at REAL,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -212,6 +226,8 @@ def get_all_active_user_ids():
         SELECT user_id FROM default_rules WHERE active = 1 AND COALESCE((SELECT is_approved FROM users WHERE users.id = default_rules.user_id), 1) = 1
         UNION
         SELECT user_id FROM mention_rules WHERE active = 1 AND COALESCE((SELECT is_approved FROM users WHERE users.id = mention_rules.user_id), 1) = 1
+        UNION
+        SELECT user_id FROM scam_shield_settings WHERE active = 1 AND COALESCE((SELECT is_approved FROM users WHERE users.id = scam_shield_settings.user_id), 1) = 1
     """)
     rows = c.fetchall()
     conn.close()
@@ -509,6 +525,51 @@ def get_mention_rule(user_id):
             res["target_chats"] = None
     else:
         res["target_chats"] = None
+    return res
+
+
+# ---------- Scam & Malware File Shield ----------
+
+def upsert_scam_shield(user_id, active, extensions=None, scope="all", send_warning=False, warning_text=None):
+    conn = get_conn()
+    c = conn.cursor()
+    exts = extensions if extensions else ".exe, .zip, .rar, .7z, .bat, .scr, .cmd, .msi, .pif, .vbs, .apk"
+    c.execute("SELECT user_id FROM scam_shield_settings WHERE user_id = ?", (user_id,))
+    if c.fetchone():
+        c.execute(
+            """UPDATE scam_shield_settings
+               SET active = ?, extensions = ?, scope = ?, send_warning = ?, warning_text = ?, updated_at = ?
+               WHERE user_id = ?""",
+            (1 if active else 0, exts, scope, 1 if send_warning else 0, warning_text, time.time(), user_id),
+        )
+    else:
+        c.execute(
+            """INSERT INTO scam_shield_settings (user_id, active, extensions, scope, send_warning, warning_text, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (user_id, 1 if active else 0, exts, scope, 1 if send_warning else 0, warning_text, time.time()),
+        )
+    conn.commit()
+    conn.close()
+
+
+def get_scam_shield(user_id):
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("SELECT * FROM scam_shield_settings WHERE user_id = ?", (user_id,))
+    row = c.fetchone()
+    conn.close()
+    if not row:
+        return {
+            "user_id": user_id,
+            "active": False,
+            "extensions": ".exe, .zip, .rar, .7z, .bat, .scr, .cmd, .msi, .pif, .vbs, .apk",
+            "scope": "all",
+            "send_warning": False,
+            "warning_text": "⚠️ Dangerous scam/malware attachment removed.",
+        }
+    res = dict(row)
+    res["active"] = bool(res.get("active"))
+    res["send_warning"] = bool(res.get("send_warning"))
     return res
 
 
