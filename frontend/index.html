@@ -843,7 +843,7 @@
 
     <div class="field">
       <label data-en="Native reaction emoji (optional)" data-kh="ប្រតិកម្ម Emoji Telegram (ជម្រើស)">Native reaction emoji (optional)</label>
-      <div class="emoji-picker">
+      <div class="emoji-picker" id="defaultEmojiPicker">
         <button type="button" class="emoji-btn" onclick="selectDefaultEmoji('👍')">👍</button>
         <button type="button" class="emoji-btn" onclick="selectDefaultEmoji('❤️')">❤️</button>
         <button type="button" class="emoji-btn" onclick="selectDefaultEmoji('🔥')">🔥</button>
@@ -859,30 +859,6 @@
     </div>
 
     <button class="action" onclick="saveDefaultRule()" data-en="Save DM Away Reply" data-kh="រក្សាទុកការឆ្លើយ DM Away">Save DM Away Reply</button>
-  </section>
-
-  <!-- TEST SIMULATOR -->
-  <section class="block">
-    <div class="section-header">
-      <h2 class="section-title" data-en="TEST SIMULATOR" data-kh="តេស្តសាកល្បង">TEST SIMULATOR</h2>
-    </div>
-    <p class="desc" data-en="Simulate an incoming message to test your rules &amp; away reply in realtime." data-kh="សាកល្បងសារចូលដើម្បីតេស្តច្បាប់ និង away reply របស់អ្នកក្នុងពេលជាក់ស្តែង។">Simulate an incoming message to test your rules &amp; away reply in realtime.</p>
-    <div class="field">
-      <label data-en="Chat" data-kh="Chat">Chat</label>
-      <select id="simChatSelect">
-        <option value="0" data-en="All Chats (Global)" data-kh="Chat ទាំងអស់ (ទូទៅ)">All Chats (Global)</option>
-      </select>
-    </div>
-    <div class="field">
-      <label data-en="Sender ID (optional)" data-kh="ID អ្នកផ្ញើ (ជម្រើស)">Sender ID (optional)</label>
-      <input id="simSenderId" type="text" placeholder="e.g. 12345678">
-    </div>
-    <div class="field">
-      <label data-en="Incoming message text" data-kh="អត្ថបទសារចូល">Incoming message text</label>
-      <input id="simMessageText" type="text" data-en-placeholder="Type a test message…" data-kh-placeholder="បញ្ចូលសារសាកល្បង…" placeholder="Type a test message…">
-    </div>
-    <button class="secondary" onclick="runSimulation()" style="width:100%;" data-en="Test Simulation" data-kh="ដំណើរការតេស្ត">Test Simulation</button>
-    <div id="simResult" style="margin-top:12px; font-size:13px;"></div>
   </section>
 
   <!-- RECENT ACTIVITY LOGS -->
@@ -1455,7 +1431,6 @@
       if (res.ok) {
         chats = await res.json();
         renderChatList(getFilteredChats());
-        updateSimChatOptions();
       }
     } catch(e) { console.error("Error loading chats:", e); }
   }
@@ -1679,7 +1654,7 @@
 
   function selectDefaultEmoji(emoji) {
     document.getElementById('defaultReactionEmoji').value = emoji;
-    document.querySelectorAll('#screen-auto .block:nth-of-type(4) .emoji-btn').forEach(btn => {
+    document.querySelectorAll('#defaultEmojiPicker .emoji-btn').forEach(btn => {
       if (btn.classList.contains('clear-btn')) return;
       btn.classList.toggle('selected', btn.textContent === emoji);
     });
@@ -1910,41 +1885,7 @@
     } catch(e) { alert(e.message); }
   }
 
-  // ---------- Simulator & Logs & Stats ----------
-  function updateSimChatOptions() {
-    const sel = document.getElementById('simChatSelect');
-    sel.innerHTML = `<option value="0" data-en="All Chats (Global)" data-kh="Chat ទាំងអស់ (ទូទៅ)">All Chats (Global)</option>`;
-    chats.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.chat_id;
-      opt.textContent = `${c.name || 'Chat ' + c.chat_id} (${c.is_group ? 'Group' : c.is_channel ? 'Channel' : 'DM'})`;
-      sel.appendChild(opt);
-    });
-  }
-
-  async function runSimulation() {
-    if (!userId) return;
-    const chat_id = parseInt(document.getElementById('simChatSelect').value) || 0;
-    const sender_id = parseInt(document.getElementById('simSenderId').value) || null;
-    const text = document.getElementById('simMessageText').value.trim();
-    const resEl = document.getElementById('simResult');
-    if (!text) { alert('Enter a test message'); return; }
-    resEl.innerHTML = `<span style="color:var(--text-dim);">${currentLang === 'kh' ? 'កំពុងតេស្ត…' : 'Simulating…'}</span>`;
-    try {
-      const res = await apiFetch(`${API_BASE}/users/${userId}/simulate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id, sender_id, text })
-      });
-      const data = await res.json();
-      if (data.matched) {
-        resEl.innerHTML = `<div class="callout accent"><strong>✓ ${currentLang === 'kh' ? 'ត្រូវនឹងច្បាប់!' : 'Rule Matched!'}</strong><br>${escapeHtml(data.reply_text || '(Reaction only)')}</div>`;
-      } else {
-        resEl.innerHTML = `<div class="callout warning"><strong>✕ ${currentLang === 'kh' ? 'មិនត្រូវនឹងច្បាប់ណាទេ' : 'No rule matched.'}</strong></div>`;
-      }
-    } catch(e) { resEl.innerHTML = `<span style="color:var(--danger);">${e.message}</span>`; }
-  }
-
+  // ---------- Logs & Stats ----------
   async function loadLogs() {
     if (!userId) return;
     try {
@@ -1969,7 +1910,8 @@
     try {
       const res = await apiFetch(`${API_BASE}/users/${userId}/stats`);
       const s = await res.json();
-      document.getElementById('statRules').textContent = s.active_rules_count || 0;
+      const activeCount = s.active_rules !== undefined ? s.active_rules : (s.active_rules_count || 0);
+      document.getElementById('statRules').textContent = activeCount;
       document.getElementById('statAway').textContent = s.away_reply_on ? 'ON' : 'OFF';
     } catch(e) { console.error(e); }
   }

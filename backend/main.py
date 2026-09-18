@@ -85,7 +85,10 @@ async def require_admin_user(current_user: dict = Depends(get_current_user)) -> 
 async def startup():
     db.init_db()
     for user_id in db.get_all_active_user_ids():
-        await worker.start_watching(user_id)
+        try:
+            await worker.start_watching(user_id)
+        except Exception as e:
+            print(f"Failed to start watching user {user_id} at startup: {e}")
 
 
 # ---------- Auth (Telegram login) ----------
@@ -279,6 +282,7 @@ async def update_rule_endpoint(rule_id: int, body: UpdateRuleBody, current_user:
     )
     if not success:
         raise HTTPException(status_code=404, detail="Rule not found or no fields to update.")
+    await worker.start_watching(current_user["id"])
     return {"status": "ok"}
 
 
@@ -290,6 +294,8 @@ async def toggle_rule_active_endpoint(rule_id: int, active: bool, current_user: 
     if rule["user_id"] != current_user["id"]:
         raise HTTPException(status_code=403, detail="Forbidden.")
     db.set_rule_active(rule_id, active)
+    if active:
+        await worker.start_watching(current_user["id"])
     return {"status": "ok"}
 
 
@@ -393,10 +399,11 @@ class DefaultRuleBody(BaseModel):
 async def save_default_rule(user_id: int, body: DefaultRuleBody, current_user: dict = Depends(get_current_user)):
     if current_user["id"] != user_id:
         raise HTTPException(status_code=403, detail="Forbidden.")
-    if not body.reply_text and not body.reaction_emoji:
+    if body.active and not body.reply_text and not body.reaction_emoji:
         raise HTTPException(status_code=400, detail="Set a reply message, a reaction, or both.")
     db.upsert_default_rule(user_id, body.reply_text, body.reaction_emoji, body.delay_seconds, body.active)
-    await worker.start_watching(user_id)
+    if body.active:
+        await worker.start_watching(user_id)
     return {"status": "ok"}
 
 
@@ -415,11 +422,13 @@ async def get_stats(user_id: int, current_user: dict = Depends(get_current_user)
     rules = db.list_rules(user_id)
     logs = db.list_logs(user_id, limit=1000)
     default = db.get_default_rule(user_id)
+    active_cnt = len([r for r in rules if r.get("active")])
     return {
-        "active_rules": len([r for r in rules if r["active"]]),
+        "active_rules": active_cnt,
+        "active_rules_count": active_cnt,
         "total_chats_covered": len(set(r["chat_id"] for r in rules)),
         "total_replies_sent": len(logs),
-        "away_reply_on": bool(default and default["active"]),
+        "away_reply_on": bool(default and default.get("active")),
     }
 
 

@@ -392,11 +392,10 @@ def get_rules_for_chat(user_id, chat_id):
 
 
 def chat_has_any_rule(user_id, chat_id):
-    """True if this chat has ANY rule (active or not) — used to decide whether
-    a message falls under the global 'default/away' reply instead."""
+    """True if this chat has an active rule specifically configured for it."""
     conn = get_conn()
     c = conn.cursor()
-    c.execute("SELECT 1 FROM rules WHERE user_id = ? AND (chat_id = ? OR chat_id = 0) LIMIT 1", (user_id, chat_id))
+    c.execute("SELECT 1 FROM rules WHERE user_id = ? AND chat_id = ? AND active = 1 LIMIT 1", (user_id, chat_id))
     row = c.fetchone()
     conn.close()
     return row is not None

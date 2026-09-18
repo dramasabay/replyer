@@ -59,7 +59,6 @@ tag in `index.html`.
 - **Multi-keyword triggers**: Separate keywords with commas (e.g. `ok, urgent, price`) with configurable match mode (`any` [OR] or `all` [AND]).
 - **Multi-chat selection & Global Rules**: Apply rules to multiple selected chats at once, or use `All Chats (Global)` to cover every conversation.
 - **Rotating reply variations**: Separate text with `|` to randomly pick a reply variant each time, keeping replies natural and anti-spam friendly.
-- **Rule Simulator**: Built-in interactive simulator to test messages and see matched rules in real time.
 - **In-place Rule Editing**: Edit rules directly without deleting and recreating them.
 - **Bulk rule controls**: Bulk toggle (Turn all ON/OFF) and bulk cleanup.
 

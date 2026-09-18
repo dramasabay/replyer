@@ -94,8 +94,21 @@ async def get_client(user_id: int) -> TelegramClient:
     api_hash = crypto_utils.decrypt(user_row["encrypted_api_hash"])
     client = TelegramClient(StringSession(session_str), user_row["api_id"], api_hash)
     await client.connect()
+    if not await client.is_user_authorized():
+        _live_clients.pop(user_id, None)
+        raise RuntimeError(f"Saved Telegram session for user {user_id} is not authorized or has expired.")
+    await client.get_me()
     _live_clients[user_id] = client
     return client
+
+
+async def disconnect_client(user_id: int):
+    client = _live_clients.pop(user_id, None)
+    if client and client.is_connected():
+        try:
+            await client.disconnect()
+        except Exception:
+            pass
 
 
 async def list_dialogs(user_id: int):
