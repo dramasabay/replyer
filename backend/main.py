@@ -16,7 +16,12 @@ import telegram_manager
 import worker
 import auth_utils
 
-app = FastAPI(title="Telegram Auto-Reply")
+app = FastAPI(
+    title="Telegram Auto-Reply",
+    docs_url=None,       # Disable /docs to prevent API attack surface enumeration
+    redoc_url=None,      # Disable /redoc
+    openapi_url=None,    # Disable /openapi.json schema disclosure
+)
 
 # The phone number treated as admin.
 ADMIN_PHONE = os.environ.get("ADMIN_PHONE", "")
@@ -40,10 +45,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Rate limiting: keyed by client IP, applied to the auth endpoints below so
+
+def get_client_ip(request: Request) -> str:
+    """Extract real client IP behind reverse proxy (NPM/Nginx), falling back to peer host."""
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip:
+        return real_ip.strip()
+    return get_remote_address(request)
+
+
+# Rate limiting: keyed by real client IP, applied to the auth endpoints below so
 # the Telegram login flow can't be used to brute-force codes or to spam
 # send_code_request at arbitrary phone numbers.
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(key_func=get_client_ip)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -76,7 +93,7 @@ async def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] =
 
 async def require_admin_user(current_user: dict = Depends(get_current_user)) -> dict:
     """Ensure current authenticated user is the designated admin."""
-    if not ADMIN_PHONE or current_user["phone"].strip() != ADMIN_PHONE.strip():
+    if not telegram_manager.is_admin_phone(current_user.get("phone", "")):
         raise HTTPException(status_code=403, detail="Access denied: Admin privileges required.")
     return current_user
 
@@ -340,6 +357,7 @@ class TestRuleBody(BaseModel):
     chat_id: int
     text: str
     sender_id: Optional[int] = None
+    is_mention: Optional[bool] = False
 
 
 @app.post("/users/{user_id}/rules/test")
@@ -350,7 +368,7 @@ async def test_rule_matcher(user_id: int, body: TestRuleBody, current_user: dict
         raise HTTPException(status_code=403, detail="Forbidden.")
 
     rules = db.get_rules_for_chat(user_id, body.chat_id)
-    matched = worker.evaluate_rules(rules, body.text, body.sender_id or 0)
+    matched = worker.evaluate_rules(rules, body.text, body.sender_id or 0, is_mention=bool(body.is_mention))
     
     results = []
     for r in matched:
@@ -366,23 +384,47 @@ async def test_rule_matcher(user_id: int, body: TestRuleBody, current_user: dict
     
     will_fallback_to_default = False
     default_info = None
-    if not results and not db.chat_has_any_rule(user_id, body.chat_id):
-        default = db.get_default_rule(user_id)
-        if default and default.get("active"):
-            will_fallback_to_default = True
-            default_info = {
-                "reply_text": worker.pick_reply_text(default["reply_text"]) if default["reply_text"] else None,
-                "reaction_emoji": default["reaction_emoji"],
-                "delay_seconds": default["delay_seconds"],
-            }
+    will_fallback_to_mention = False
+    mention_info = None
+
+    if not results:
+        if body.is_mention:
+            mention = db.get_mention_rule(user_id)
+            if mention and mention.get("active"):
+                will_fallback_to_mention = True
+                mention_info = {
+                    "reply_text": worker.pick_reply_text(mention["reply_text"]) if mention["reply_text"] else None,
+                    "reaction_emoji": mention["reaction_emoji"],
+                    "delay_seconds": mention["delay_seconds"],
+                    "cooldown_seconds": mention.get("cooldown_seconds", 30),
+                }
+        elif not db.chat_has_any_rule(user_id, body.chat_id):
+            default = db.get_default_rule(user_id)
+            if default and default.get("active"):
+                will_fallback_to_default = True
+                default_info = {
+                    "reply_text": worker.pick_reply_text(default["reply_text"]) if default["reply_text"] else None,
+                    "reaction_emoji": default["reaction_emoji"],
+                    "delay_seconds": default["delay_seconds"],
+                }
+
+    fallback_text = None
+    if results:
+        fallback_text = results[0]["reply_text"]
+    elif mention_info:
+        fallback_text = mention_info["reply_text"]
+    elif default_info:
+        fallback_text = default_info["reply_text"]
 
     return {
-        "matched": len(results) > 0 or will_fallback_to_default,
+        "matched": len(results) > 0 or will_fallback_to_default or will_fallback_to_mention,
         "matched_rules": results,
         "match_count": len(results),
         "will_fallback_to_default": will_fallback_to_default,
         "default_rule": default_info,
-        "reply_text": results[0]["reply_text"] if results else (default_info["reply_text"] if default_info else None)
+        "will_fallback_to_mention": will_fallback_to_mention,
+        "mention_rule": mention_info,
+        "reply_text": fallback_text
     }
 
 
@@ -415,6 +457,45 @@ async def read_default_rule(user_id: int, current_user: dict = Depends(get_curre
     return rule or {}
 
 
+# ---------- Mention rule (Groups & Channels) ----------
+
+class MentionRuleBody(BaseModel):
+    reply_text: Optional[str] = None
+    reaction_emoji: Optional[str] = None
+    delay_seconds: int = 0
+    cooldown_seconds: int = 30
+    active: bool = True
+    target_chats: Optional[list[int]] = None
+
+
+@app.post("/users/{user_id}/mention-rule")
+async def save_mention_rule(user_id: int, body: MentionRuleBody, current_user: dict = Depends(get_current_user)):
+    if current_user["id"] != user_id:
+        raise HTTPException(status_code=403, detail="Forbidden.")
+    if body.active and not body.reply_text and not body.reaction_emoji:
+        raise HTTPException(status_code=400, detail="Set a reply message, a reaction, or both.")
+    db.upsert_mention_rule(
+        user_id=user_id,
+        reply_text=body.reply_text,
+        reaction_emoji=body.reaction_emoji,
+        delay_seconds=body.delay_seconds,
+        cooldown_seconds=body.cooldown_seconds,
+        active=body.active,
+        target_chats=body.target_chats,
+    )
+    if body.active:
+        await worker.start_watching(user_id)
+    return {"status": "ok"}
+
+
+@app.get("/users/{user_id}/mention-rule")
+async def read_mention_rule(user_id: int, current_user: dict = Depends(get_current_user)):
+    if current_user["id"] != user_id:
+        raise HTTPException(status_code=403, detail="Forbidden.")
+    rule = db.get_mention_rule(user_id)
+    return rule or {}
+
+
 @app.get("/users/{user_id}/stats")
 async def get_stats(user_id: int, current_user: dict = Depends(get_current_user)):
     if current_user["id"] != user_id:
@@ -422,6 +503,7 @@ async def get_stats(user_id: int, current_user: dict = Depends(get_current_user)
     rules = db.list_rules(user_id)
     logs = db.list_logs(user_id, limit=1000)
     default = db.get_default_rule(user_id)
+    mention = db.get_mention_rule(user_id)
     active_cnt = len([r for r in rules if r.get("active")])
     return {
         "active_rules": active_cnt,
@@ -429,6 +511,7 @@ async def get_stats(user_id: int, current_user: dict = Depends(get_current_user)
         "total_chats_covered": len(set(r["chat_id"] for r in rules)),
         "total_replies_sent": len(logs),
         "away_reply_on": bool(default and default.get("active")),
+        "mention_reply_on": bool(mention and mention.get("active")),
     }
 
 
@@ -470,9 +553,7 @@ async def admin_set_user_status(target_user_id: int, body: UserStatusBody, curre
 async def is_admin(user_id: int, current_user: dict = Depends(get_current_user)):
     if current_user["id"] != user_id:
         raise HTTPException(status_code=403, detail="Forbidden.")
-    if not ADMIN_PHONE:
-        return {"is_admin": False}
-    return {"is_admin": current_user["phone"].strip() == ADMIN_PHONE.strip()}
+    return {"is_admin": telegram_manager.is_admin_phone(current_user.get("phone", ""))}
 
 
 @app.get("/admin/overview")

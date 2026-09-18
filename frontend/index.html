@@ -357,6 +357,76 @@
   .emoji-btn:hover { border-color: var(--accent); transform: scale(1.08); }
   .emoji-btn.selected { border-color: var(--accent); background: var(--accent-dim); box-shadow: 0 0 0 2px var(--accent); }
   .emoji-btn.clear-btn { font-size: 12px; font-weight: 700; width: auto; padding: 0 10px; color: var(--text-dim); }
+  .emoji-btn.browse-all-btn {
+    width: auto; padding: 0 12px; font-size: 12px; font-weight: 700;
+    color: var(--accent); border-color: rgba(0, 210, 186, 0.4);
+    background: var(--accent-dim);
+  }
+  .emoji-btn.browse-all-btn:hover {
+    border-color: var(--accent); transform: scale(1.04);
+  }
+
+  /* ── Telegram Full Emoji Picker Modal ── */
+  .all-emoji-modal-box {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); width: 560px; max-width: 95vw;
+    max-height: 85vh; display: flex; flex-direction: column;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6); animation: fadeIn .2s ease;
+    overflow: hidden;
+  }
+  .all-emoji-header {
+    padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .all-emoji-tabs {
+    display: flex; gap: 4px; overflow-x: auto; padding: 8px 16px;
+    background: var(--panel-raised); border-bottom: 1px solid var(--border);
+    scrollbar-width: none;
+  }
+  .all-emoji-tabs::-webkit-scrollbar { display: none; }
+  .emoji-tab-btn {
+    background: transparent; border: 1px solid transparent; border-radius: 16px;
+    padding: 5px 12px; font-size: 12px; font-weight: 600; color: var(--text-dim);
+    cursor: pointer; white-space: nowrap; transition: all .15s;
+    font-family: 'Inter', 'Noto Sans Khmer', sans-serif;
+  }
+  .emoji-tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .emoji-tab-btn.active {
+    background: var(--accent-dim); border-color: var(--accent);
+    color: var(--accent); font-weight: 700;
+  }
+  .all-emoji-body {
+    flex: 1; overflow-y: auto; padding: 14px 18px;
+  }
+  .emoji-category-title {
+    font-size: 11.5px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--text-dim); margin: 12px 0 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .emoji-category-title:first-child { margin-top: 0; }
+  .emoji-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+    gap: 6px; margin-bottom: 12px;
+  }
+  .emoji-cell {
+    width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; border-radius: 8px; cursor: pointer; user-select: none;
+    background: var(--panel-raised); border: 1px solid transparent; transition: all .12s;
+  }
+  .emoji-cell:hover {
+    transform: scale(1.22); border-color: var(--accent); background: var(--accent-dim);
+    z-index: 2; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+  .all-emoji-footer {
+    padding: 12px 18px; border-top: 1px solid var(--border);
+    background: var(--panel-raised); display: flex; align-items: center;
+    justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  }
+  .preview-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--panel); border: 1px solid var(--border);
+    padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700;
+  }
 
   /* ── Callout / Tip ── */
   .callout {
@@ -732,7 +802,12 @@
         <option value="all" data-en="All incoming messages" data-kh="សារចូលទាំងអស់">All incoming messages</option>
         <option value="sender" data-en="From specific sender(s)" data-kh="ពីអ្នកផ្ញើជាក់លាក់">From specific sender(s)</option>
         <option value="keyword" data-en="Message contains keyword(s)" data-kh="សារមានពាក្យគន្លឹះជាក់លាក់">Message contains keyword(s)</option>
+        <option value="mention" data-en="@ Mention or Reply to me" data-kh="@ Mention ឬ Reply មកកាន់ខ្ញុំ">@ Mention or Reply to me</option>
       </select>
+    </div>
+
+    <div class="callout accent" id="mentionTriggerTip" style="display:none; margin-bottom:12px;">
+      <span data-en="⚡ Triggers whenever someone mentions your @username, tags you, or replies to your message in the selected chat(s)." data-kh="⚡ ដំណើរការនៅពេលមាននរណាម្នាក់ mention @username របស់អ្នក tag ឈ្មោះ ឬ reply លើសាររបស់អ្នកក្នុង chat ដែលបានជ្រើសរើស។">⚡ Triggers whenever someone mentions your @username, tags you, or replies to your message in the selected chat(s).</span>
     </div>
 
     <div class="field" id="senderField" style="display:none;">
@@ -776,6 +851,7 @@
           <button type="button" class="emoji-btn" onclick="selectEmoji('🎉')">🎉</button>
           <button type="button" class="emoji-btn" onclick="selectEmoji('⚡')">⚡</button>
           <button type="button" class="emoji-btn" onclick="selectEmoji('🙏')">🙏</button>
+          <button type="button" class="emoji-btn browse-all-btn" onclick="openAllEmojiModal('rule')" data-en="🎨 All Emojis…" data-kh="🎨 Emoji ទាំងអស់…">🎨 All Emojis…</button>
           <button type="button" class="emoji-btn clear-btn" onclick="selectEmoji('')" data-en="Clear" data-kh="សម្អាត">Clear</button>
         </div>
         <input type="hidden" id="reactionEmoji" value="">
@@ -848,6 +924,7 @@
         <button type="button" class="emoji-btn" onclick="selectDefaultEmoji('❤️')">❤️</button>
         <button type="button" class="emoji-btn" onclick="selectDefaultEmoji('🔥')">🔥</button>
         <button type="button" class="emoji-btn" onclick="selectDefaultEmoji('🙏')">🙏</button>
+        <button type="button" class="emoji-btn browse-all-btn" onclick="openAllEmojiModal('default')" data-en="🎨 All Emojis…" data-kh="🎨 Emoji ទាំងអស់…">🎨 All Emojis…</button>
         <button type="button" class="emoji-btn clear-btn" onclick="selectDefaultEmoji('')" data-en="Clear" data-kh="សម្អាត">Clear</button>
       </div>
       <input type="hidden" id="defaultReactionEmoji" value="">
@@ -859,6 +936,91 @@
     </div>
 
     <button class="action" onclick="saveDefaultRule()" data-en="Save DM Away Reply" data-kh="រក្សាទុកការឆ្លើយ DM Away">Save DM Away Reply</button>
+  </section>
+
+  <!-- SECTION 05: GROUP & CHANNEL MENTION AUTO-REPLY -->
+  <section class="block" style="border: 2px solid rgba(99, 102, 241, 0.45);">
+    <div class="section-header" style="justify-content:space-between; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="section-label" style="background:var(--accent2); color:#fff;">05</span>
+        <h2 class="section-title" data-en="GROUP &amp; CHANNEL MENTION REPLY" data-kh="ឆ្លើយតបពេលគេ MENTION ក្នុងក្រុម &amp; ប៉ុស្តិ៍">GROUP &amp; CHANNEL MENTION REPLY</h2>
+      </div>
+      <span class="badge group">👥 <span data-en="Groups &amp; Channels" data-kh="ក្រុម &amp; ប៉ុស្តិ៍">Groups &amp; Channels</span></span>
+    </div>
+
+    <div class="callout accent" style="margin-top:10px; border-left-color:var(--accent2); background:rgba(99, 102, 241, 0.1);">
+      <strong data-en="🔔 Instant Mention &amp; Reply Trigger:" data-kh="🔔 ឆ្លើយភ្លាមៗពេលមានការ Mention ឬ Reply:">🔔 Instant Mention &amp; Reply Trigger:</strong>
+      <span data-en=" Automatically replies and reacts whenever someone mentions your @username, tags you in a text mention, or replies to your message in any group or supergroup!" data-kh=" ឆ្លើយតប និង react emoji ដោយស្វ័យប្រវត្តិនៅពេលមាននរណាម្នាក់ mention @username របស់អ្នក tag ឈ្មោះ ឬ reply លើសាររបស់អ្នកក្នុងក្រុម ឬប៉ុស្តិ៍!"> Automatically replies and reacts whenever someone mentions your @username, tags you in a text mention, or replies to your message in any group or supergroup!</span>
+    </div>
+
+    <div class="switch-row">
+      <div>
+        <strong data-en="Enable Group &amp; Channel Mention Reply" data-kh="បើកការឆ្លើយពេលគេ Mention ក្នុងក្រុម">Enable Group &amp; Channel Mention Reply</strong>
+        <div style="font-size:12px; color:var(--text-dim);" data-en="Replies when someone mentions or replies to you in groups" data-kh="ឆ្លើយតបនៅពេលមានគេ mention ឬ reply មកកាន់អ្នកក្នុងក្រុម">Replies when someone mentions or replies to you in groups</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="mentionRuleActive">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <!-- Group & Channel Scope Selector -->
+    <div class="field" style="margin-bottom:16px;">
+      <label data-en="Apply Mention Auto-Reply to:" data-kh="អនុវត្តការឆ្លើយ Mention ចំពោះ:">Apply Mention Auto-Reply to:</label>
+      <div style="display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;">
+        <button type="button" class="chip active" id="mentionScopeAllBtn" onclick="setMentionScope('all')" data-en="🌐 All Groups &amp; Channels" data-kh="🌐 គ្រប់ក្រុម &amp; ប៉ុស្តិ៍ទាំងអស់">🌐 All Groups &amp; Channels</button>
+        <button type="button" class="chip" id="mentionScopeSelectedBtn" onclick="setMentionScope('selected')" data-en="👥 Only Selected Groups &amp; Channels" data-kh="👥 តែក្រុម &amp; ប៉ុស្តិ៍ដែលបានជ្រើស">👥 Only Selected Groups &amp; Channels</button>
+      </div>
+
+      <!-- Specific groups/channels selection box -->
+      <div id="mentionChatSelectBox" style="display:none; margin-top:12px; background:var(--panel-raised); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+          <span style="font-size:12px; font-weight:700;" data-en="Check the groups/channels to activate:" data-kh="ធីកជ្រើសរើសក្រុម ឬប៉ុស្តិ៍ដែលត្រូវដំណើរការ:">Check the groups/channels to activate:</span>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="chip" onclick="selectAllMentionChats()" data-en="Select All" data-kh="ជ្រើសទាំងអស់" style="font-size:11px; padding:3px 10px;">Select All</button>
+            <button type="button" class="chip" onclick="clearMentionChats()" data-en="Clear" data-kh="សម្អាត" style="font-size:11px; padding:3px 10px;">Clear</button>
+          </div>
+        </div>
+        <input type="text" id="mentionChatSearch" data-en-placeholder="Search groups or channels…" data-kh-placeholder="ស្វែងរកក្រុម ឬប៉ុស្តិ៍…" placeholder="Search groups or channels…" oninput="renderMentionChatList()" style="margin-bottom:8px; font-size:12.5px; padding:7px 10px;">
+        <div id="mentionChatList" style="max-height:190px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; padding-right:4px;">
+          <!-- Loaded groups & channels checkboxes -->
+        </div>
+        <div id="mentionSelectedCountBadge" style="font-size:11.5px; color:var(--text-dim); margin-top:8px; font-weight:600;">0 selected</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label data-en="Mention reply message (use | for rotating variations)" data-kh="សារឆ្លើយ Mention (ប្រើ | សម្រាប់ការបង្វិលសារ)">Mention reply message (use | for rotating variations)</label>
+      <textarea id="mentionReplyText" rows="3" data-en-placeholder="Thanks for mentioning me! I'll get back to you shortly. | Hey! Saw your mention, checking now!" data-kh-placeholder="អរគុណដែលបាន mention ខ្ញុំ! ខ្ញុំនឹងឆ្លើយតបក្នុងពេលឆាប់ៗ។ | សួស្តី! បានឃើញការ mention ហើយ កំពុងពិនិត្យមើល!" placeholder="Thanks for mentioning me! I'll get back to you shortly. | Hey! Saw your mention, checking now!"></textarea>
+    </div>
+
+    <div class="field">
+      <label data-en="Native reaction emoji (optional)" data-kh="ប្រតិកម្ម Emoji Telegram (ជម្រើស)">Native reaction emoji (optional)</label>
+      <div class="emoji-picker" id="mentionEmojiPicker">
+        <button type="button" class="emoji-btn" onclick="selectMentionEmoji('👀')">👀</button>
+        <button type="button" class="emoji-btn" onclick="selectMentionEmoji('👍')">👍</button>
+        <button type="button" class="emoji-btn" onclick="selectMentionEmoji('❤️')">❤️</button>
+        <button type="button" class="emoji-btn" onclick="selectMentionEmoji('🔥')">🔥</button>
+        <button type="button" class="emoji-btn" onclick="selectMentionEmoji('🫡')">🫡</button>
+        <button type="button" class="emoji-btn" onclick="selectMentionEmoji('⚡')">⚡</button>
+        <button type="button" class="emoji-btn browse-all-btn" onclick="openAllEmojiModal('mention')" data-en="🎨 All Emojis…" data-kh="🎨 Emoji ទាំងអស់…">🎨 All Emojis…</button>
+        <button type="button" class="emoji-btn clear-btn" onclick="selectMentionEmoji('')" data-en="Clear" data-kh="សម្អាត">Clear</button>
+      </div>
+      <input type="hidden" id="mentionReactionEmoji" value="">
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      <div class="field">
+        <label data-en="Delay in seconds (0 = Realtime Instant)" data-kh="ពន្យារពេល (0 = Realtime ភ្លាមៗ)">Delay in seconds (0 = Realtime Instant)</label>
+        <input id="mentionDelay" type="number" value="0" min="0">
+      </div>
+      <div class="field">
+        <label data-en="Anti-loop cooldown in seconds" data-kh="Cooldown ការពារ loop (វិនាទី)">Anti-loop cooldown in seconds</label>
+        <input id="mentionCooldown" type="number" value="30" min="0">
+      </div>
+    </div>
+
+    <button class="action" style="background:linear-gradient(135deg, var(--accent2), #4338CA);" onclick="saveMentionRule()" data-en="Save Mention Auto-Reply" data-kh="រក្សាទុកការឆ្លើយ Mention">Save Mention Auto-Reply</button>
   </section>
 
   <!-- RECENT ACTIVITY LOGS -->
@@ -1018,9 +1180,10 @@
         </div>
       </div>
 
-      <div class="stats-grid" style="grid-template-columns:1fr 1fr; margin-bottom:20px;">
+      <div class="stats-grid" style="grid-template-columns:repeat(3, 1fr); margin-bottom:20px;">
         <div class="stat-cell"><div class="val" id="statRules">—</div><div class="lbl" data-en="ACTIVE RULES" data-kh="ច្បាប់សកម្ម">ACTIVE RULES</div></div>
         <div class="stat-cell"><div class="val" id="statAway">—</div><div class="lbl" data-en="AWAY REPLY" data-kh="AWAY REPLY">AWAY REPLY</div></div>
+        <div class="stat-cell"><div class="val" id="statMention">—</div><div class="lbl" data-en="MENTION REPLY" data-kh="MENTION REPLY">MENTION REPLY</div></div>
       </div>
 
       <button class="danger" style="width:100%;" onclick="logout()" data-en="Log Out" data-kh="ចាកចេញ">Log Out</button>
@@ -1081,6 +1244,7 @@
         <option value="all" data-en="All incoming messages" data-kh="សារចូលទាំងអស់">All incoming messages</option>
         <option value="sender" data-en="From specific sender(s)" data-kh="ពីអ្នកផ្ញើជាក់លាក់">From specific sender(s)</option>
         <option value="keyword" data-en="Message contains keyword(s)" data-kh="សារមានពាក្យគន្លឹះជាក់លាក់">Message contains keyword(s)</option>
+        <option value="mention" data-en="@ Mention or Reply to me" data-kh="@ Mention ឬ Reply មកកាន់ខ្ញុំ">@ Mention or Reply to me</option>
       </select>
     </div>
 
@@ -1096,7 +1260,10 @@
 
     <div class="field">
       <label data-en="Reaction Emoji" data-kh="Emoji ប្រតិកម្ម">Reaction Emoji</label>
-      <input type="text" id="editReactionEmoji" placeholder="e.g. 👍 or ❤️">
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="text" id="editReactionEmoji" placeholder="e.g. 👍 or ❤️" style="flex:1;">
+        <button type="button" class="secondary" onclick="openAllEmojiModal('edit')" style="white-space:nowrap; padding:8px 12px; font-size:12px;" data-en="🎨 All Emojis…" data-kh="🎨 Emoji ទាំងអស់…">🎨 All Emojis…</button>
+      </div>
     </div>
 
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -1113,6 +1280,55 @@
     <div style="display:flex; gap:10px; margin-top:16px;">
       <button class="action" onclick="saveEditedRule()" data-en="Save Changes" data-kh="រក្សាទុកការកែប្រែ">Save Changes</button>
       <button class="secondary" onclick="closeEditModal()" data-en="Cancel" data-kh="បោះបង់">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ALL TELEGRAM EMOJIS & REACTIONS MODAL ================= -->
+<div class="modal-overlay" id="allEmojiModal">
+  <div class="all-emoji-modal-box">
+    <div class="all-emoji-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:20px;">🎨</span>
+        <strong style="font-size:14.5px; letter-spacing:0.02em;" data-en="TELEGRAM EMOJI &amp; REACTION PALETTE" data-kh="តារាង EMOJI &amp; ប្រតិកម្ម TELEGRAM">TELEGRAM EMOJI &amp; REACTION PALETTE</strong>
+      </div>
+      <button class="secondary" style="padding:2px 8px; font-size:12px;" onclick="closeAllEmojiModal()">✕</button>
+    </div>
+
+    <!-- Search Input -->
+    <div style="padding:10px 18px; background:var(--panel); border-bottom:1px solid var(--border);">
+      <input type="text" id="emojiSearchInput" placeholder="🔍 Search emoji (e.g. smile, heart, fire, cat, clap, 100)..." oninput="filterEmojis()" style="font-size:13px; padding:8px 12px;">
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="all-emoji-tabs" id="allEmojiTabs">
+      <button type="button" class="emoji-tab-btn active" onclick="switchEmojiTab('reactions', this)">⚡ Reactions</button>
+      <button type="button" class="emoji-tab-btn" onclick="switchEmojiTab('smileys', this)">😀 Smileys</button>
+      <button type="button" class="emoji-tab-btn" onclick="switchEmojiTab('people', this)">👥 People</button>
+      <button type="button" class="emoji-tab-btn" onclick="switchEmojiTab('animals', this)">🐱 Animals</button>
+      <button type="button" class="emoji-tab-btn" onclick="switchEmojiTab('food', this)">🍔 Food</button>
+      <button type="button" class="emoji-tab-btn" onclick="switchEmojiTab('sports', this)">⚽ Sports</button>
+      <button type="button" class="emoji-tab-btn" onclick="switchEmojiTab('travel', this)">✈️ Travel</button>
+      <button type="button" class="emoji-tab-btn" onclick="switchEmojiTab('objects', this)">💡 Objects</button>
+      <button type="button" class="emoji-tab-btn" onclick="switchEmojiTab('flags', this)">🚩 Flags</button>
+    </div>
+
+    <!-- Emoji Grid Container -->
+    <div class="all-emoji-body" id="allEmojiBody">
+      <!-- Generated dynamically by renderEmojiGrid -->
+    </div>
+
+    <!-- Footer Controls -->
+    <div class="all-emoji-footer">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:12px; color:var(--text-dim);" data-en="Selected:" data-kh="បានជ្រើស:">Selected:</span>
+        <div class="preview-pill"><span id="currentEmojiPreview" style="font-size:18px;">—</span></div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; flex:1; justify-content:flex-end;">
+        <input type="text" id="customEmojiDirectInput" placeholder="or type/paste any emoji" style="max-width:180px; font-size:13px; padding:6px 10px;" oninput="onCustomEmojiDirectInput(this.value)">
+        <button class="action" style="width:auto; padding:7px 16px; font-size:12.5px;" onclick="applyCustomEmojiDirect()" data-en="Use Emoji" data-kh="ប្រើ Emoji នេះ">Use Emoji</button>
+        <button class="danger" style="padding:6px 12px; font-size:12px;" onclick="clearSelectedEmojiFromModal()" data-en="Clear" data-kh="សម្អាត">Clear</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1311,6 +1527,7 @@
       await loadChats();
       loadRules();
       loadDefaultRule();
+      loadMentionRule();
       loadLogs();
       loadStats();
       if (isAdmin) {
@@ -1409,6 +1626,7 @@
         await loadChats();
         loadRules();
         loadDefaultRule();
+        loadMentionRule();
         loadStats();
       } else {
         msg.innerHTML = `<span style="color:var(--danger);">${escapeHtml(data.detail || 'Verification failed')}</span>`;
@@ -1431,6 +1649,9 @@
       if (res.ok) {
         chats = await res.json();
         renderChatList(getFilteredChats());
+        if (typeof renderMentionChatList === 'function' && mentionScope === 'selected') {
+          renderMentionChatList();
+        }
       }
     } catch(e) { console.error("Error loading chats:", e); }
   }
@@ -1642,12 +1863,14 @@
     const t = document.getElementById('triggerType').value;
     document.getElementById('senderField').style.display = t === 'sender' ? 'block' : 'none';
     document.getElementById('keywordField').style.display = t === 'keyword' ? 'block' : 'none';
+    const tip = document.getElementById('mentionTriggerTip');
+    if (tip) tip.style.display = t === 'mention' ? 'block' : 'none';
   }
 
   function selectEmoji(emoji) {
     document.getElementById('reactionEmoji').value = emoji;
     document.querySelectorAll('.emoji-picker .emoji-btn').forEach(btn => {
-      if (btn.classList.contains('clear-btn')) return;
+      if (btn.classList.contains('clear-btn') || btn.classList.contains('browse-all-btn')) return;
       btn.classList.toggle('selected', btn.textContent === emoji);
     });
   }
@@ -1655,7 +1878,7 @@
   function selectDefaultEmoji(emoji) {
     document.getElementById('defaultReactionEmoji').value = emoji;
     document.querySelectorAll('#defaultEmojiPicker .emoji-btn').forEach(btn => {
-      if (btn.classList.contains('clear-btn')) return;
+      if (btn.classList.contains('clear-btn') || btn.classList.contains('browse-all-btn')) return;
       btn.classList.toggle('selected', btn.textContent === emoji);
     });
   }
@@ -1673,6 +1896,8 @@
     } else if (triggerType === 'keyword') {
       triggerValue = document.getElementById('keyword').value.trim();
       if (!triggerValue) { alert(currentLang === 'kh' ? 'សូមបញ្ចូលពាក្យគន្លឹះ' : 'Please enter keywords'); return; }
+    } else if (triggerType === 'mention') {
+      triggerValue = null;
     }
 
     const replyText = document.getElementById('replyText').value.trim() || null;
@@ -1757,6 +1982,7 @@
       card.className = 'rule-card' + (r.active ? ' active-rule' : '');
       const triggerBadge = r.trigger_type === 'all' ? `<span class="badge muted">⚡ All Messages</span>` :
                            r.trigger_type === 'sender' ? `<span class="badge dm">👤 Sender: ${escapeHtml(r.trigger_value)}</span>` :
+                           r.trigger_type === 'mention' ? `<span class="badge group">@ Mention / Reply${r.trigger_value ? ': ' + escapeHtml(r.trigger_value) : ''}</span>` :
                            `<span class="badge group">🔍 Keyword: ${escapeHtml(r.trigger_value)}</span>`;
       const replyContent = r.reply_text ? escapeHtml(r.reply_text) : `<em style="color:var(--text-dim);">${currentLang === 'kh' ? '(ប្រតិកម្ម Emoji តែប៉ុណ្ណោះ)' : '(Reaction only)'}</em>`;
       card.innerHTML = `
@@ -1839,6 +2065,392 @@
     } catch(e) { alert(e.message); }
   }
 
+  // ---------- Section 05: Group & Channel Mention Rule ----------
+  function selectMentionEmoji(emoji) {
+    document.getElementById('mentionReactionEmoji').value = emoji;
+    document.querySelectorAll('#mentionEmojiPicker .emoji-btn').forEach(btn => {
+      if (btn.classList.contains('clear-btn') || btn.classList.contains('browse-all-btn')) return;
+      btn.classList.toggle('selected', btn.textContent === emoji);
+    });
+  }
+
+  let mentionScope = 'all'; // 'all' or 'selected'
+  let mentionSelectedChatIds = new Set();
+
+  function setMentionScope(scope) {
+    mentionScope = scope;
+    const allBtn = document.getElementById('mentionScopeAllBtn');
+    const selBtn = document.getElementById('mentionScopeSelectedBtn');
+    const box = document.getElementById('mentionChatSelectBox');
+    if (allBtn) allBtn.classList.toggle('active', scope === 'all');
+    if (selBtn) selBtn.classList.toggle('active', scope === 'selected');
+    if (box) box.style.display = scope === 'selected' ? 'block' : 'none';
+    if (scope === 'selected') {
+      renderMentionChatList();
+    }
+  }
+
+  function getMentionFilteredChats() {
+    const q = (document.getElementById('mentionChatSearch')?.value || '').trim().toLowerCase();
+    return chats.filter(c => {
+      if (!c.is_group && !c.is_channel) return false;
+      if (q) {
+        const nameMatch = c.name && c.name.toLowerCase().includes(q);
+        const userMatch = c.username && c.username.toLowerCase().includes(q);
+        const idMatch = String(c.chat_id).includes(q);
+        if (!nameMatch && !userMatch && !idMatch) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderMentionChatList() {
+    const el = document.getElementById('mentionChatList');
+    if (!el) return;
+    el.innerHTML = '';
+    const list = getMentionFilteredChats();
+    if (!list.length) {
+      el.innerHTML = `<div style="padding:10px; text-align:center; font-size:12px; color:var(--text-dim);">${currentLang === 'kh' ? 'រកមិនឃើញក្រុម ឬប៉ុស្តិ៍ទេ' : 'No groups or channels found.'}</div>`;
+      updateMentionSelectedCountUI();
+      return;
+    }
+    list.forEach(c => {
+      const isSelected = mentionSelectedChatIds.has(c.chat_id);
+      const row = document.createElement('label');
+      row.style.cssText = `display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 10px; border-radius:6px; background:${isSelected ? 'var(--accent-dim)' : 'transparent'}; cursor:pointer; font-size:12.5px; border:1px solid ${isSelected ? 'var(--accent)' : 'transparent'}; transition:all .15s;`;
+      
+      const typeBadge = c.is_group ? `<span class="badge group" style="font-size:10px; padding:2px 6px;">👥 Group</span>` : `<span class="badge channel" style="font-size:10px; padding:2px 6px;">📢 Channel</span>`;
+      
+      row.innerHTML = `
+        <div style="display:flex; align-items:center; gap:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleMentionChatSelection(${c.chat_id})">
+          <span style="font-weight:600; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name || 'Chat ' + c.chat_id)}</span>
+          ${c.username ? `<span style="font-size:11px; color:var(--text-dim);">@${escapeHtml(c.username)}</span>` : ''}
+        </div>
+        <div>${typeBadge}</div>
+      `;
+      el.appendChild(row);
+    });
+    updateMentionSelectedCountUI();
+  }
+
+  function toggleMentionChatSelection(chatId) {
+    if (mentionSelectedChatIds.has(chatId)) {
+      mentionSelectedChatIds.delete(chatId);
+    } else {
+      mentionSelectedChatIds.add(chatId);
+    }
+    renderMentionChatList();
+  }
+
+  function selectAllMentionChats() {
+    getMentionFilteredChats().forEach(c => mentionSelectedChatIds.add(c.chat_id));
+    renderMentionChatList();
+  }
+
+  function clearMentionChats() {
+    mentionSelectedChatIds.clear();
+    renderMentionChatList();
+  }
+
+  function updateMentionSelectedCountUI() {
+    const badge = document.getElementById('mentionSelectedCountBadge');
+    if (badge) {
+      badge.textContent = `${mentionSelectedChatIds.size} ${currentLang === 'kh' ? 'ក្រុម/ប៉ុស្តិ៍ បានជ្រើសរើស' : 'group(s)/channel(s) selected'}`;
+    }
+  }
+
+  async function loadMentionRule() {
+    if (!userId) return;
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/mention-rule`);
+      if (res.ok) {
+        const r = await res.json();
+        document.getElementById('mentionRuleActive').checked = !!r.active;
+        document.getElementById('mentionReplyText').value = r.reply_text || '';
+        document.getElementById('mentionReactionEmoji').value = r.reaction_emoji || '';
+        document.getElementById('mentionDelay').value = r.delay_seconds !== undefined ? r.delay_seconds : 0;
+        document.getElementById('mentionCooldown').value = r.cooldown_seconds !== undefined ? r.cooldown_seconds : 30;
+        selectMentionEmoji(r.reaction_emoji || '');
+
+        mentionSelectedChatIds.clear();
+        if (r.target_chats && Array.isArray(r.target_chats) && r.target_chats.length > 0) {
+          r.target_chats.forEach(id => mentionSelectedChatIds.add(id));
+          setMentionScope('selected');
+        } else {
+          setMentionScope('all');
+        }
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  async function saveMentionRule() {
+    if (!userId) return;
+    const active = document.getElementById('mentionRuleActive').checked;
+    const reply_text = document.getElementById('mentionReplyText').value.trim() || null;
+    const reaction_emoji = document.getElementById('mentionReactionEmoji').value.trim() || null;
+    const delay_seconds = parseInt(document.getElementById('mentionDelay').value) || 0;
+    const cooldown_seconds = parseInt(document.getElementById('mentionCooldown').value) || 0;
+
+    let target_chats = null;
+    if (mentionScope === 'selected') {
+      if (mentionSelectedChatIds.size === 0) {
+        alert(currentLang === 'kh' ? 'សូមជ្រើសរើសក្រុម ឬប៉ុស្តិ៍យ៉ាងហោចណាស់ 1 ឬជ្រើសរើស "គ្រប់ក្រុម & ប៉ុស្តិ៍ទាំងអស់"' : 'Please select at least one group/channel, or choose "All Groups & Channels".');
+        return;
+      }
+      target_chats = Array.from(mentionSelectedChatIds);
+    }
+
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/mention-rule`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active, reply_text, reaction_emoji, delay_seconds, cooldown_seconds, target_chats })
+      });
+      if (res.ok) {
+        alert(currentLang === 'kh' ? 'ការឆ្លើយ Group Mention ត្រូវបានរក្សាទុកជោគជ័យ!' : 'Group Mention auto-reply saved successfully!');
+        loadStats();
+      } else {
+        alert('Failed to save mention rule');
+      }
+    } catch(e) { alert(e.message); }
+  }
+
+  // ---------- Telegram Full Emoji Library & Controller ----------
+  const EMOJI_DATABASE = {
+    reactions: {
+      name: "⚡ Telegram Reactions",
+      emojis: [
+        "👍", "👎", "❤️", "🔥", "🥰", "👏", "😁", "🤔", "🤯", "😱", "🤬", "😢", "🎉", "🤩", "🤮", "💩",
+        "🙏", "👌", "🕊️", "🤡", "🥱", "🥴", "😍", "🐳", "❤️‍🔥", "🌚", "🌭", "💯", "🤣", "⚡", "🍌", "🏆",
+        "💔", "🤨", "😐", "🍓", "🍾", "💋", "🖕", "😈", "😴", "😭", "🤓", "👻", "👨‍💻", "👀", "🎃", "🙈",
+        "😇", "😨", "🤝", "✍️", "🤗", "🫡", "🎅", "🎄", "☃️", "💅", "🤪", "🗿", "🆒", "💘", "🙉", "🦄",
+        "😘", "💊", "🙊", "😎", "👾", "🤷‍♂️", "🤷", "🤷‍♀️", "😡", "🪙", "💸", "💎", "🎯", "🚀", "💡", "🛡️",
+        "🔒", "👑", "✨", "💥", "💫", "🌟", "🥂", "🍻", "☕", "🍕", "🍔", "🍿", "🍦", "🍩", "🍫"
+      ]
+    },
+    smileys: {
+      name: "😀 Smileys & Emotion",
+      emojis: [
+        "😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "🙃", "😉", "😊", "😇", "🥰", "😍", "🤩",
+        "😘", "😗", "😚", "😙", "😋", "😛", "😜", "🤪", "😝", "🤑", "🤗", "🤭", "🤫", "🤔", "🤐", "🤨",
+        "😐", "😑", "😶", "😏", "😒", "🙄", "😬", "🤥", "😌", "😔", "😪", "🤤", "😴", "😷", "🤒", "🤕",
+        "🤢", "🤮", "🤧", "🥵", "🥶", "🥴", "😵", "🤯", "🤠", "🥳", "😎", "🤓", "🧐", "😕", "😟", "🙁",
+        "☹️", "😮", "😯", "😲", "😳", "🥺", "😦", "😧", "😨", "😰", "😥", "😢", "😭", "😱", "😖", "😣",
+        "😞", "😓", "😩", "😫", "🥱", "😤", "😡", "😠", "🤬", "😈", "👿", "💀", "☠️", "💩", "🤡", "👹",
+        "👺", "👻", "👽", "👾", "🤖"
+      ]
+    },
+    people: {
+      name: "👥 People & Gestures",
+      emojis: [
+        "👋", "🤚", "🖐️", "✋", "🖖", "👌", "🤌", "🤏", "✌️", "🤞", "🫰", "🤟", "🤘", "🤙", "👈", "👉",
+        "👆", "🖕", "👇", "☝️", "👍", "👎", "✊", "👊", "🤛", "🤜", "👏", "🙌", "👐", "🤲", "🤝", "🙏",
+        "✍️", "💅", "🤳", "💪", "🦾", "🦿", "🦵", "🦶", "👂", "🦻", "👃", "🧠", "🫀", "🫁", "🦷", "🦴",
+        "👀", "👁️", "👅", "👄", "💋", "🫂", "👤", "👥", "🗣️", "👶", "👧", "🧒", "👦", "👩", "🧑", "👨",
+        "👩‍🦱", "🧑‍🦱", "👨‍🦱", "👩‍🦰", "🧑‍🦰", "👨‍🦰", "👱‍♀️", "👱", "👱‍♂️", "👩‍🦳", "🧑‍🦳", "👨‍🦳", "👩‍🦲", "🧑‍🦲", "👨‍🦲", "🧔",
+        "👵", "🧓", "👴", "👲", "👳‍♀️", "👳", "👳‍♂️", "🧕", "👮‍♀️", "👮", "👷‍♀️", "👷", "💂‍♀️", "💂", "🕵️‍♀️", "🕵️"
+      ]
+    },
+    animals: {
+      name: "🐱 Animals & Nature",
+      emojis: [
+        "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐻‍❄️", "🐨", "🐯", "🦁", "🐮", "🐷", "🐽", "🐸",
+        "🐵", "🙈", "🙉", "🙊", "🐒", "🐔", "🐧", "🐦", "🐤", "🐣", "🐥", "🦆", "🦅", "🦉", "🦇", "🐺",
+        "🐗", "🐴", "🦄", "🐝", "🪱", "🐛", "🦋", "🐌", "🐞", "🐜", "🪰", "🪲", "🪳", "🦟", "🦗", "🕷️",
+        "🕸️", "🦂", "🐢", "🐍", "🦎", "🦖", "🦕", "🐙", "🦑", "🦐", "🦞", "🦀", "🐡", "🐠", "🐟", "🐬",
+        "🐳", "🐋", "🦈", "🐊", "🐅", "🐆", "🦓", "🦍", "🦧", "🦣", "🐘", "🦛", "🦏", "🐪", "🐫", "🦒",
+        "🦘", "🦬", "🐃", "🐂", "🐄", "🐎", "🐖", "🐏", "🐑", "🦙", "🐐", "🦌", "🐕", "🐩", "🦮", "🐕‍🦺",
+        "🐈", "🐈‍⬛", "🪶", "🐓", "🦃", "🦤", "🦚", "🦜", "🦢", "🦩", "🕊️", "🐇", "🦝", "🦨", "🦡", "🦫",
+        "🦦", "🦥", "🐁", "🐀", "🐿️", "🦔", "🐾", "🐉", "🐲", "🌵", "🎄", "🌲", "🌳", "🌴", "🪵", "🌱",
+        "🌿", "☘️", "🍀", "🎍", "🪴", "🎋", "🍃", "🍂", "🍁", "🍄", "🐚", "🪨", "🌾", "💐", "🌷", "🌹",
+        "🥀", "🌺", "🌸", "🌼", "🌻", "🌞", "🌝", "🌛", "🌜", "🌚", "🌕", "🌖", "🌗", "🌘", "🌑", "🌒",
+        "🌓", "🌔", "🌙", "🌎", "🌍", "🌏", "🪐", "💫", "⭐️", "🌟", "✨", "⚡", "☄️", "💥", "🔥", "🌪️",
+        "🌈", "☀️", "🌤️", "⛅", "🌥️", "☁️", "🌦️", "🌧️", "⛈️", "🌩️", "🌨️", "❄️", "☃️", "⛄", "🌬️", "💨"
+      ]
+    },
+    food: {
+      name: "🍔 Food & Drink",
+      emojis: [
+        "🍏", "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥",
+        "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒", "🌶️", "🫑", "🌽", "🥕", "🫒", "🧄", "🧅", "🥔", "🍠",
+        "🥐", "🥯", "🍞", "🥖", "🥨", "🧀", "🥚", "🍳", "🧈", "🥞", "🧇", "🥓", "🥩", "🍗", "🍖", "🦴",
+        "🌭", "🍔", "🍟", "🍕", "🫓", "🥪", "🥙", "🧆", "🌮", "🌯", "🫔", "🥗", "🥘", "🫕", "🥫", "🍝",
+        "🍜", "🍲", "🍛", "🍣", "🍱", "🥟", "🦪", "🍤", "🍙", "🍚", "🍘", "🍥", "🥠", "🥮", "🍢", "🍡",
+        "🍧", "🍨", "🍦", "🥧", "🧁", "🍰", "🎂", "🍮", "🍭", "🍬", "🍫", "🍿", "🍩", "🍪", "🌰", "🥜",
+        "🍯", "🥛", "🍼", "🫖", "☕", "🍵", "🧃", "🥤", "🧋", "🍶", "🍺", "🍻", "🥂", "🍷", "🥃", "🍸",
+        "🍹", "🧉", "🍾", "🧊"
+      ]
+    },
+    sports: {
+      name: "⚽ Activities & Sports",
+      emojis: [
+        "⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🥏", "🎱", "🪀", "🏓", "🏸", "🏒", "🏑", "🥍",
+        "🏏", "🪃", "🥅", "⛳", "🪁", "🏹", "🎣", "🤿", "🥊", "🥋", "🎽", "🛹", "🛼", "🛷", "⛸️", "🥌",
+        "🎿", "⛷️", "🏂", "🪂", "🏋️", "🤼", "🤸", "⛹️", "🤺", "🤾", "🏌️", "🏇", "🧘", "🏄", "🏊", "🤽",
+        "🚣", "🧗", "🚵", "🚴", "🏆", "🥇", "🥈", "🥉", "🏅", "🎖️", "🏵️", "🎗️", "🎫", "🎟️", "🎪", "🤹",
+        "🎭", "🩰", "🎨", "🎬", "🎤", "🎧", "🎼", "🎹", "🥁", "🪘", "🎷", "🎺", "🪗", "🎸", "🪕", "🎻",
+        "🎲", "♟️", "🎯", "🎳", "🎮", "🎰", "🧩"
+      ]
+    },
+    travel: {
+      name: "✈️ Travel & Places",
+      emojis: [
+        "🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑", "🚒", "🚐", "🛻", "🚚", "🚛", "🚜", "🦯", "🦽",
+        "🦼", "🛴", "🚲", "🛵", "🏍️", "🛺", "🚨", "🚔", "🚍", "🚘", "🚖", "🚡", "🚠", "🚟", "🚃", "🚋",
+        "🚞", "🚝", "🚄", "🚅", "🚈", "🚂", "🚆", "🚇", "🚊", "🚉", "✈️", "🛫", "🛬", "🛩️", "💺", "🛰️",
+        "🚀", "🛸", "🚁", "🛶", "⛵", "🚤", "🛥️", "🛳️", "⛴️", "🚢", "⚓", "🛟", "⛽", "🚧", "🚦", "🚥",
+        "🚏", "🗺️", "🗿", "🗽", "🗼", "🏰", "🏯", "🏟️", "🎡", "🎢", "🎠", "⛲", "⛱️", "🏖️", "🏝️", "🏜️",
+        "🌋", "⛰️", "🏔️", "🗻", "🏕️", "⛺", "🏠", "🏡", "🏢", "🏣", "🏤", "🏥", "🏦", "🏧", "🏨", "🏪"
+      ]
+    },
+    objects: {
+      name: "💡 Objects & Symbols",
+      emojis: [
+        "📱", "💻", "🖥️", "🖨️", "⌨️", "🖱️", "🕹️", "📷", "📸", "📹", "🎥", "📞", "☎️", "📟", "📠", "📺",
+        "📻", "🎙️", "🧭", "⏱️", "⏲️", "⏰", "🕰️", "⌛", "⏳", "📡", "🔋", "🪫", "🔌", "💡", "🔦", "🕯️",
+        "🪔", "🧯", "🛢️", "💸", "💵", "💴", "💶", "💷", "🪙", "💰", "💳", "💎", "⚖️", "🪜", "🧰", "🪛",
+        "🔧", "🔨", "⚒️", "🛠️", "⛏️", "🪚", "🔩", "⚙️", "⛓️", "🧲", "🔫", "💣", "🧨", "🪓", "🔪", "🗡️",
+        "⚔️", "🛡️", "⚱️", "🏺", "🔮", "📿", "🧿", "🪬", "💈", "⚗️", "🔭", "🔬", "🩹", "🩺", "💊", "💉",
+        "🩸", "🧬", "🦠", "🧫", "🧪", "🌡️", "🧹", "🪠", "🧺", "🧻", "🚽", "🚰", "🚿", "🛁", "🧼", "🪥",
+        "🪒", "🧽", "🪣", "🧴", "🛎️", "🔑", "🗝️", "🚪", "🪑", "🛋️", "🛏️", "🛍️", "🛒", "🎁", "🎈", "🎉",
+        "🎊", "✉️", "📩", "📨", "📧", "💌", "📥", "📤", "📦", "🏷️", "📪", "📫", "📬", "📭", "📮", "📜",
+        "📄", "📑", "🧾", "📊", "📈", "📉", "🗒️", "🗓️", "📆", "📅", "📇", "🗃️", "🗳️", "🗄️", "📋", "📁",
+        "📂", "🗂️", "🗞️", "📰", "📓", "📕", "📗", "📘", "📙", "📚", "📖", "🔖", "🧷", "🔗", "📎", "🖇️",
+        "📐", "📏", "📌", "📍", "✂️", "🖊️", "🖋️", "✒️", "🖌️", "🖍️", "📝", "✏️", "🔍", "🔎", "🔏", "🔐",
+        "🔒", "🔓", "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❤️‍🔥", "❤️‍🩹", "❣️", "💕",
+        "💞", "💓", "💗", "💖", "💘", "💝", "💟", "☮️", "✝️", "☪️", "🕉️", "☸️", "✡️", "🔯", "🕎", "☯️",
+        "☦️", "🆔", "⚛️", "🉑", "☢️", "☣️", "📴", "📳", "🈶", "🈚", "🈸", "🈺", "🈷️", "✴️", "🆚", "💮",
+        "🉐", "㊙️", "㊗️", "🈴", "🈵", "🈹", "🈲", "🅰️", "🅱️", "🆎", "🆑", "🅾️", "🆘", "❌", "⭕", "🛑",
+        "⛔", "📛", "🚫", "💯", "💢", "♨️", "🚷", "🚯", "🚳", "🚱", "🔞", "📵", "🚭", "❗", "❕", "❓",
+        "❔", "‼️", "⁉️", "🔅", "🔆", "〽️", "⚠️", "🚸", "🔱", "⚜️", "🔰", "♻️", "✅", "🈯", "💹", "❇️",
+        "✳️", "❎", "🌐", "💠", "Ⓜ️", "🌀", "💤", "🏧", "🚾", "♿", "🅿️", "🈳", "🈂️", "🛂", "🛃", "🛄",
+        "🛅", "🚹", "🚺", "🚼", "⚧️", "🚻", "🚮", "🎦", "📶", "🈁", "🆖", "🆗", "🆙", "🆒", "🆕", "🆓"
+      ]
+    },
+    flags: {
+      name: "🚩 Flags",
+      emojis: [
+        "🏁", "🚩", "🎌", "🏴", "🏳️", "🏳️‍🌈", "🏳️‍⚧️", "🏴‍☠️", "🇰🇭", "🇺🇸", "🇬🇧", "🇯🇵", "🇰🇷", "🇨🇳", "🇩🇪", "🇫🇷",
+        "🇻🇳", "🇹🇭", "🇸🇬", "🇲🇾", "🇵🇭", "🇮🇩", "🇮🇳", "🇦🇺", "🇨🇦", "🇧🇷", "🇷🇺", "🇮🇹", "🇪🇸", "🇰🇵", "🇲🇲", "🇱🇦"
+      ]
+    }
+  };
+
+  let activeEmojiTarget = 'rule';
+  let activeEmojiCategory = 'reactions';
+
+  function renderEmojiGrid(categoryFilter = null, searchQuery = "") {
+    const body = document.getElementById('allEmojiBody');
+    if (!body) return;
+    body.innerHTML = '';
+    const q = (searchQuery || "").trim().toLowerCase();
+
+    Object.keys(EMOJI_DATABASE).forEach(catKey => {
+      if (categoryFilter && catKey !== categoryFilter) return;
+      const cat = EMOJI_DATABASE[catKey];
+      let filteredList = cat.emojis;
+      if (q) {
+        filteredList = cat.emojis.filter(e => e.includes(q) || cat.name.toLowerCase().includes(q));
+      }
+      if (!filteredList.length) return;
+
+      const title = document.createElement('div');
+      title.className = 'emoji-category-title';
+      title.textContent = cat.name;
+      body.appendChild(title);
+
+      const grid = document.createElement('div');
+      grid.className = 'emoji-grid';
+      filteredList.forEach(e => {
+        const cell = document.createElement('div');
+        cell.className = 'emoji-cell';
+        cell.textContent = e;
+        cell.title = e;
+        cell.onclick = () => pickEmojiFromModal(e);
+        grid.appendChild(cell);
+      });
+      body.appendChild(grid);
+    });
+
+    if (!body.children.length) {
+      body.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-dim); font-size:13px;">No emojis found. You can type or paste any emoji below!</div>`;
+    }
+  }
+
+  function switchEmojiTab(catKey, btn) {
+    activeEmojiCategory = catKey;
+    document.querySelectorAll('.all-emoji-tabs .emoji-tab-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.getElementById('emojiSearchInput').value = '';
+    renderEmojiGrid(catKey);
+  }
+
+  function filterEmojis() {
+    const q = document.getElementById('emojiSearchInput').value.trim();
+    if (q) {
+      renderEmojiGrid(null, q);
+    } else {
+      renderEmojiGrid(activeEmojiCategory);
+    }
+  }
+
+  function openAllEmojiModal(target) {
+    activeEmojiTarget = target;
+    let curVal = '';
+    if (target === 'rule') curVal = document.getElementById('reactionEmoji').value || '';
+    else if (target === 'edit') curVal = document.getElementById('editReactionEmoji').value || '';
+    else if (target === 'default') curVal = document.getElementById('defaultReactionEmoji').value || '';
+    else if (target === 'mention') curVal = document.getElementById('mentionReactionEmoji').value || '';
+
+    document.getElementById('customEmojiDirectInput').value = curVal;
+    document.getElementById('currentEmojiPreview').textContent = curVal || '—';
+    document.getElementById('emojiSearchInput').value = '';
+    const firstTab = document.querySelector('.all-emoji-tabs .emoji-tab-btn');
+    switchEmojiTab('reactions', firstTab);
+    document.getElementById('allEmojiModal').classList.add('active');
+  }
+
+  function closeAllEmojiModal() {
+    document.getElementById('allEmojiModal').classList.remove('active');
+  }
+
+  function pickEmojiFromModal(emoji) {
+    document.getElementById('customEmojiDirectInput').value = emoji;
+    document.getElementById('currentEmojiPreview').textContent = emoji || '—';
+    applyEmojiValue(emoji);
+    closeAllEmojiModal();
+  }
+
+  function onCustomEmojiDirectInput(val) {
+    document.getElementById('currentEmojiPreview').textContent = val || '—';
+  }
+
+  function applyCustomEmojiDirect() {
+    const val = document.getElementById('customEmojiDirectInput').value.trim();
+    applyEmojiValue(val);
+    closeAllEmojiModal();
+  }
+
+  function clearSelectedEmojiFromModal() {
+    document.getElementById('customEmojiDirectInput').value = '';
+    document.getElementById('currentEmojiPreview').textContent = '—';
+    applyEmojiValue('');
+    closeAllEmojiModal();
+  }
+
+  function applyEmojiValue(val) {
+    if (activeEmojiTarget === 'rule') {
+      selectEmoji(val);
+    } else if (activeEmojiTarget === 'edit') {
+      document.getElementById('editReactionEmoji').value = val;
+    } else if (activeEmojiTarget === 'default') {
+      selectDefaultEmoji(val);
+    } else if (activeEmojiTarget === 'mention') {
+      selectMentionEmoji(val);
+    }
+  }
+
   // ---------- Edit Rule Modal ----------
   function openEditModal(rule) {
     document.getElementById('editRuleId').value = rule.id;
@@ -1858,7 +2470,7 @@
 
   function onEditTriggerChange() {
     const t = document.getElementById('editTriggerType').value;
-    document.getElementById('editTriggerValueField').style.display = t === 'all' ? 'none' : 'block';
+    document.getElementById('editTriggerValueField').style.display = (t === 'all' || t === 'mention') ? 'none' : 'block';
   }
 
   async function saveEditedRule() {
@@ -1913,6 +2525,8 @@
       const activeCount = s.active_rules !== undefined ? s.active_rules : (s.active_rules_count || 0);
       document.getElementById('statRules').textContent = activeCount;
       document.getElementById('statAway').textContent = s.away_reply_on ? 'ON' : 'OFF';
+      const mEl = document.getElementById('statMention');
+      if (mEl) mEl.textContent = s.mention_reply_on ? 'ON' : 'OFF';
     } catch(e) { console.error(e); }
   }
 

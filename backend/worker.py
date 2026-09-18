@@ -23,6 +23,9 @@ _last_reply_times = {}
 # Cooldown cache for Away reply: (user_id, chat_id) -> last_replied_timestamp
 _last_away_times = {}
 
+# Cooldown cache for Mention reply: (user_id, chat_id) -> last_replied_timestamp
+_last_mention_times = {}
+
 # Track which user_ids already have a listener attached on a live client instance
 _watching_clients = {}
 
@@ -72,6 +75,38 @@ def check_sender_match(trigger_value: str, sender_id: int, sender_username: str 
     return False
 
 
+async def check_is_mention_or_reply(event, raw_text: str, owner_id: int, owner_username: str) -> bool:
+    """Checks if incoming message in group or channel mentions or replies to the user."""
+    # 1. Text contains @username (case-insensitive)
+    if owner_username and f"@{owner_username}" in raw_text.lower():
+        return True
+
+    # 2. Telegram message entities (MessageEntityMention, MessageEntityMentionName)
+    entities = getattr(event.message, 'entities', None) or []
+    for ent in entities:
+        if isinstance(ent, types.MessageEntityMention):
+            try:
+                part = raw_text[ent.offset:ent.offset + ent.length].lower()
+                if owner_username and part == f"@{owner_username}":
+                    return True
+            except Exception:
+                pass
+        elif isinstance(ent, types.MessageEntityMentionName):
+            if owner_id and getattr(ent, 'user_id', None) == owner_id:
+                return True
+
+    # 3. Message is a direct reply to the user's message
+    if getattr(event, 'is_reply', False):
+        try:
+            reply_msg = await event.get_reply_message()
+            if reply_msg and getattr(reply_msg, 'sender_id', None) == owner_id:
+                return True
+        except Exception:
+            pass
+
+    return False
+
+
 def pick_reply_text(raw_reply_text: str) -> str:
     """Supports rotating variations separated by '|'. Randomly picks one variation."""
     if not raw_reply_text:
@@ -83,10 +118,10 @@ def pick_reply_text(raw_reply_text: str) -> str:
     return raw_reply_text
 
 
-def evaluate_rules(rules: list, text: str, sender_id: int, sender_username: str = None) -> list:
-    """Pure rule evaluation function: prioritizes specific rules (sender, keyword)
+def evaluate_rules(rules: list, text: str, sender_id: int, sender_username: str = None, is_mention: bool = False) -> list:
+    """Pure rule evaluation function: prioritizes specific rules (sender, mention, keyword)
     over generic catch-all ('all') rules. Returns all matching rules."""
-    specific_rules = [r for r in rules if r.get("trigger_type") in ("sender", "keyword")]
+    specific_rules = [r for r in rules if r.get("trigger_type") in ("sender", "mention", "keyword")]
     catch_all_rules = [r for r in rules if r.get("trigger_type") == "all"]
 
     matched = []
@@ -97,6 +132,11 @@ def evaluate_rules(rules: list, text: str, sender_id: int, sender_username: str 
         t_val = rule.get("trigger_value")
         if t_type == "sender" and check_sender_match(t_val, sender_id, sender_username):
             matched.append(rule)
+        elif t_type == "mention":
+            if is_mention:
+                # If trigger_value is provided, also require matching keyword; otherwise any mention matches!
+                if not t_val or not str(t_val).strip() or check_keyword_match(t_val, text, rule.get("match_mode") or "any"):
+                    matched.append(rule)
         elif t_type == "keyword":
             mode = rule.get("match_mode") or "any"
             if check_keyword_match(t_val, text, mode):
@@ -127,8 +167,15 @@ async def start_watching(user_id: int):
     try:
         me = await client.get_me()
         owner_id = me.id if me else None
+        owner_username = (me.username or "").lower() if (me and getattr(me, 'username', None)) else ""
     except Exception:
         owner_id = None
+        owner_username = ""
+
+    if not owner_id:
+        u_row = db.get_user(user_id)
+        if u_row and u_row.get("telegram_user_id"):
+            owner_id = u_row["telegram_user_id"]
 
     @client.on(events.NewMessage(incoming=True))
     async def handler(event):
@@ -168,10 +215,16 @@ async def start_watching(user_id: int):
         except Exception:
             pass
 
-        # Helper for Away / Default Reply
+        # Detect if message is in a group or channel, and if it mentions the user
+        is_group_or_channel = bool(getattr(event, 'is_group', False) or getattr(event, 'is_channel', False))
+        is_mention = False
+        if is_group_or_channel:
+            is_mention = await check_is_mention_or_reply(event, raw_text, owner_id, owner_username)
+
+        # Helper for Away / Default Reply (Private 1-on-1 DMs only)
         async def try_fire_away_reply():
             # 1. STRICT ACCOUNT-TO-ACCOUNT (DM ONLY):
-            if not event.is_private or getattr(event, 'is_group', False) or getattr(event, 'is_channel', False):
+            if not event.is_private or is_group_or_channel:
                 return
 
             # 2. Never reply to Telegram official service messages (777000, 42777)
@@ -214,13 +267,63 @@ async def start_watching(user_id: int):
             if default.get("reaction_emoji"):
                 await send_reaction(client, chat_id, event.message.id, default["reaction_emoji"], input_chat=input_chat)
 
+        # Helper for Group & Channel Mention Auto-Reply
+        async def try_fire_mention_reply():
+            if not is_group_or_channel or not is_mention:
+                return
+
+            if sender_id in (777000, 42777) or sender_is_bot:
+                return
+
+            mention_cfg = db.get_mention_rule(user_id)
+            if not (mention_cfg and mention_cfg.get("active")):
+                return
+
+            # If user selected specific groups/channels, only fire if chat_id is selected
+            target_chats = mention_cfg.get("target_chats")
+            if target_chats and isinstance(target_chats, list) and len(target_chats) > 0:
+                # Compare both raw chat_id and string / int representations
+                if chat_id not in target_chats and int(chat_id) not in [int(c) for c in target_chats if str(c).replace('-','').isdigit()]:
+                    return
+
+            cooldown = mention_cfg.get("cooldown_seconds") or 30
+            now_ts = time.time()
+            last_time = _last_mention_times.get((user_id, chat_id), 0)
+            if cooldown > 0 and (now_ts - last_time < cooldown):
+                return
+            _last_mention_times[(user_id, chat_id)] = now_ts
+
+            delay = mention_cfg.get("delay_seconds") or 0
+            if delay > 0:
+                await asyncio.sleep(delay)
+
+            # Send reply message
+            if mention_cfg.get("reply_text"):
+                reply_text = pick_reply_text(mention_cfg["reply_text"])
+                if reply_text:
+                    try:
+                        await event.reply(reply_text)
+                    except Exception as e:
+                        print(f"Mention event.reply failed: {e}, falling back to send_message")
+                        try:
+                            await client.send_message(chat_id, reply_text)
+                        except Exception as e2:
+                            print(f"Mention send_message failed: {e2}")
+
+            # Send reaction if set
+            if mention_cfg.get("reaction_emoji"):
+                await send_reaction(client, chat_id, event.message.id, mention_cfg["reaction_emoji"], input_chat=input_chat)
+
         # 1. Fetch active rules for this chat
         rules = db.get_rules_for_chat(user_id, chat_id)
-        matched_rules = evaluate_rules(rules, raw_text, sender_id, sender_username)
+        matched_rules = evaluate_rules(rules, raw_text, sender_id, sender_username, is_mention=is_mention)
 
-        # 2. If no active rule matched this message, fire Away / Default reply
+        # 2. If no active rule matched this message, fire Away / Default or Mention reply
         if not matched_rules:
-            await try_fire_away_reply()
+            if event.is_private:
+                await try_fire_away_reply()
+            elif is_group_or_channel and is_mention:
+                await try_fire_mention_reply()
             return
 
         # 3. Execute all matching rules

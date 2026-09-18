@@ -99,6 +99,27 @@ def init_db():
     )
     """)
 
+    # Mention reply — triggers when user is mentioned or replied to in groups/channels.
+    # One row per user.
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS mention_rules (
+        user_id INTEGER PRIMARY KEY,
+        reply_text TEXT,
+        reaction_emoji TEXT,
+        delay_seconds INTEGER DEFAULT 0,
+        cooldown_seconds INTEGER DEFAULT 30,
+        active INTEGER DEFAULT 0,
+        target_chats TEXT,
+        updated_at REAL,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+    """)
+
+    c.execute("PRAGMA table_info(mention_rules)")
+    mention_cols = {row[1] for row in c.fetchall()}
+    if "target_chats" not in mention_cols:
+        c.execute("ALTER TABLE mention_rules ADD COLUMN target_chats TEXT")
+
     c.execute("""
     CREATE TABLE IF NOT EXISTS logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -174,9 +195,11 @@ def get_all_active_user_ids():
     conn = get_conn()
     c = conn.cursor()
     c.execute("""
-        SELECT DISTINCT user_id FROM rules WHERE active = 1 AND (SELECT COALESCE(is_approved, 1) FROM users WHERE users.id = rules.user_id) = 1
+        SELECT DISTINCT user_id FROM rules WHERE active = 1 AND COALESCE((SELECT is_approved FROM users WHERE users.id = rules.user_id), 1) = 1
         UNION
-        SELECT user_id FROM default_rules WHERE active = 1 AND (SELECT COALESCE(is_approved, 1) FROM users WHERE users.id = default_rules.user_id) = 1
+        SELECT user_id FROM default_rules WHERE active = 1 AND COALESCE((SELECT is_approved FROM users WHERE users.id = default_rules.user_id), 1) = 1
+        UNION
+        SELECT user_id FROM mention_rules WHERE active = 1 AND COALESCE((SELECT is_approved FROM users WHERE users.id = mention_rules.user_id), 1) = 1
     """)
     rows = c.fetchall()
     conn.close()
@@ -379,9 +402,10 @@ def get_rules_for_chat(user_id, chat_id):
              CASE WHEN chat_id = 0 THEN 1 ELSE 0 END ASC,
              CASE trigger_type
                WHEN 'sender' THEN 1
-               WHEN 'keyword' THEN 2
-               WHEN 'all' THEN 3
-               ELSE 4
+               WHEN 'mention' THEN 2
+               WHEN 'keyword' THEN 3
+               WHEN 'all' THEN 4
+               ELSE 5
              END ASC,
              id ASC""",
         (user_id, chat_id),
@@ -431,6 +455,49 @@ def get_default_rule(user_id):
     row = c.fetchone()
     conn.close()
     return dict(row) if row else None
+
+
+# ---------- Mention rule (Groups & Channels) ----------
+ 
+def upsert_mention_rule(user_id, reply_text, reaction_emoji, delay_seconds, cooldown_seconds, active, target_chats=None):
+    conn = get_conn()
+    c = conn.cursor()
+    target_chats_json = json.dumps(target_chats) if isinstance(target_chats, (list, dict)) else (target_chats if target_chats else None)
+    c.execute("SELECT user_id FROM mention_rules WHERE user_id = ?", (user_id,))
+    if c.fetchone():
+        c.execute(
+            """UPDATE mention_rules
+               SET reply_text = ?, reaction_emoji = ?, delay_seconds = ?, cooldown_seconds = ?, active = ?, target_chats = ?, updated_at = ?
+               WHERE user_id = ?""",
+            (reply_text, reaction_emoji, delay_seconds, cooldown_seconds, 1 if active else 0, target_chats_json, time.time(), user_id),
+        )
+    else:
+        c.execute(
+            """INSERT INTO mention_rules (user_id, reply_text, reaction_emoji, delay_seconds, cooldown_seconds, active, target_chats, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (user_id, reply_text, reaction_emoji, delay_seconds, cooldown_seconds, 1 if active else 0, target_chats_json, time.time()),
+        )
+    conn.commit()
+    conn.close()
+
+
+def get_mention_rule(user_id):
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("SELECT * FROM mention_rules WHERE user_id = ?", (user_id,))
+    row = c.fetchone()
+    conn.close()
+    if not row:
+        return None
+    res = dict(row)
+    if res.get("target_chats"):
+        try:
+            res["target_chats"] = json.loads(res["target_chats"])
+        except Exception:
+            res["target_chats"] = None
+    else:
+        res["target_chats"] = None
+    return res
 
 
 # ---------- Logs ----------

@@ -14,44 +14,101 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import db
 import crypto_utils
 
+import time
+import re
+import hmac
+
 # Whichever phone number logs in matching this becomes admin (that's you).
 # Set this env var to your own phone number, in the same format you log in with.
 ADMIN_PHONE = os.environ.get("ADMIN_PHONE", "")
+
+
+def normalize_phone(phone: str) -> str:
+    """Normalizes phone number by stripping whitespace, dashes, and extra formatting."""
+    if not phone:
+        return ""
+    return re.sub(r"[^\d+]", "", str(phone).strip())
+
+
+def is_admin_phone(phone: str) -> bool:
+    """Secure constant-time comparison for admin verification."""
+    if not ADMIN_PHONE:
+        return False
+    norm_admin = normalize_phone(ADMIN_PHONE)
+    norm_phone = normalize_phone(phone)
+    return bool(norm_admin and hmac.compare_digest(norm_phone, norm_admin))
+
 
 # In-memory cache of live clients, keyed by user_id, so the worker
 # doesn't reconnect on every message.
 _live_clients = {}
 
-# Temporary storage for in-progress logins, keyed by phone number.
+# Temporary storage for in-progress logins, keyed by normalized phone number.
 _pending_logins = {}
+PENDING_LOGIN_TTL = 600  # 10 minutes expiry
+
+
+async def _cleanup_pending_logins():
+    """Disconnect and clean up expired pending login attempts to prevent memory/socket exhaustion."""
+    now = time.time()
+    expired = [p for p, data in _pending_logins.items() if now - data.get("created_at", 0) > PENDING_LOGIN_TTL]
+    for p in expired:
+        data = _pending_logins.pop(p, None)
+        if data and "client" in data:
+            try:
+                await data["client"].disconnect()
+            except Exception:
+                pass
 
 
 async def start_login(phone: str, api_id: int, api_hash: str):
     """Step 1: send the login code to the user's Telegram app.
     api_id/api_hash are supplied by the user themselves (their own,
-    from my.telegram.org) rather than shared app-wide credentials —
-    this keeps one user's activity from ever affecting another's."""
-    client = TelegramClient(StringSession(), api_id, api_hash)
+    from my.telegram.org) rather than shared app-wide credentials."""
+    await _cleanup_pending_logins()
+
+    clean_phone = normalize_phone(phone)
+    clean_hash = (api_hash or "").strip()
+    try:
+        clean_api_id = int(api_id)
+    except (ValueError, TypeError):
+        return {"status": "error", "detail": "Invalid API ID format. Must be an integer."}
+
+    if not clean_phone or not clean_hash:
+        return {"status": "error", "detail": "Phone and API Hash are required."}
+
+    # Disconnect and remove any existing pending client for this phone
+    prev = _pending_logins.pop(clean_phone, None)
+    if prev and "client" in prev:
+        try:
+            await prev["client"].disconnect()
+        except Exception:
+            pass
+
+    client = TelegramClient(StringSession(), clean_api_id, clean_hash)
     await client.connect()
-    sent = await client.send_code_request(phone)
-    _pending_logins[phone] = {
+    sent = await client.send_code_request(clean_phone)
+    _pending_logins[clean_phone] = {
         "client": client,
         "phone_code_hash": sent.phone_code_hash,
-        "api_id": api_id,
-        "api_hash": api_hash,
+        "api_id": clean_api_id,
+        "api_hash": clean_hash,
+        "created_at": time.time(),
     }
     return {"status": "code_sent"}
 
 
 async def verify_login(phone: str, code: str, password: str = None):
     """Step 2: submit the code (and 2FA password if needed), persist session."""
-    pending = _pending_logins.get(phone)
+    await _cleanup_pending_logins()
+    clean_phone = normalize_phone(phone)
+    pending = _pending_logins.get(clean_phone)
     if not pending:
-        return {"status": "error", "detail": "No pending login for this phone. Call start_login first."}
+        return {"status": "error", "detail": "No pending login found or session expired. Please request a new code."}
 
     client = pending["client"]
     try:
-        await client.sign_in(phone, code, phone_code_hash=pending["phone_code_hash"])
+        await client.sign_in(clean_phone, code.strip(), phone_code_hash=pending["phone_code_hash"])
     except SessionPasswordNeededError:
         if not password:
             return {"status": "needs_password"}
@@ -63,7 +120,7 @@ async def verify_login(phone: str, code: str, password: str = None):
     encrypted_api_hash = crypto_utils.encrypt(pending["api_hash"])
 
     user_id = db.get_or_create_user(
-        phone=phone,
+        phone=clean_phone,
         telegram_user_id=me.id,
         display_name=me.first_name or "",
         api_id=pending["api_id"],
@@ -72,11 +129,11 @@ async def verify_login(phone: str, code: str, password: str = None):
     db.save_session(user_id, encrypted_session)
 
     _live_clients[user_id] = client
-    del _pending_logins[phone]
+    _pending_logins.pop(clean_phone, None)
 
-    is_admin = bool(ADMIN_PHONE) and phone.strip() == ADMIN_PHONE.strip()
+    admin_status = is_admin_phone(clean_phone)
 
-    return {"status": "ok", "user_id": user_id, "display_name": me.first_name, "is_admin": is_admin}
+    return {"status": "ok", "user_id": user_id, "display_name": me.first_name, "is_admin": admin_status}
 
 
 async def get_client(user_id: int) -> TelegramClient:
