@@ -77,6 +77,10 @@ def check_sender_match(trigger_value: str, sender_id: int, sender_username: str 
 
 async def check_is_mention_or_reply(event, raw_text: str, owner_id: int, owner_username: str) -> bool:
     """Checks if incoming message in group or channel mentions or replies to the user."""
+    # 0. Telegram native mentioned flag (set directly by Telegram servers)
+    if getattr(event.message, 'mentioned', False):
+        return True
+
     # 1. Text contains @username (case-insensitive)
     if owner_username and f"@{owner_username}" in raw_text.lower():
         return True
@@ -318,7 +322,22 @@ async def start_watching(user_id: int):
         rules = db.get_rules_for_chat(user_id, chat_id)
         matched_rules = evaluate_rules(rules, raw_text, sender_id, sender_username, is_mention=is_mention)
 
-        # 2. If no active rule matched this message, fire Away / Default or Mention reply
+        # 2. In groups/channels when mentioned, if no chat-specific rule (sender/mention/keyword) matched,
+        # Section 05 Group Mention Reply takes priority over generic 'all' catch-all rules!
+        has_specific_rule = any(r.get("trigger_type") in ("sender", "mention", "keyword") for r in matched_rules)
+        if is_group_or_channel and is_mention and not has_specific_rule:
+            mention_cfg = db.get_mention_rule(user_id)
+            if mention_cfg and mention_cfg.get("active"):
+                target_chats = mention_cfg.get("target_chats")
+                target_match = True
+                if target_chats and isinstance(target_chats, list) and len(target_chats) > 0:
+                    if chat_id not in target_chats and int(chat_id) not in [int(c) for c in target_chats if str(c).replace('-','').isdigit()]:
+                        target_match = False
+                if target_match:
+                    await try_fire_mention_reply()
+                    return
+
+        # 3. If no active rule matched this message, fire Away / Default or Mention reply
         if not matched_rules:
             if event.is_private:
                 await try_fire_away_reply()

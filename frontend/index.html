@@ -949,14 +949,14 @@
     </div>
 
     <div class="callout accent" style="margin-top:10px; border-left-color:var(--accent2); background:rgba(99, 102, 241, 0.1);">
-      <strong data-en="🔔 Instant Mention &amp; Reply Trigger:" data-kh="🔔 ឆ្លើយភ្លាមៗពេលមានការ Mention ឬ Reply:">🔔 Instant Mention &amp; Reply Trigger:</strong>
-      <span data-en=" Automatically replies and reacts whenever someone mentions your @username, tags you in a text mention, or replies to your message in any group or supergroup!" data-kh=" ឆ្លើយតប និង react emoji ដោយស្វ័យប្រវត្តិនៅពេលមាននរណាម្នាក់ mention @username របស់អ្នក tag ឈ្មោះ ឬ reply លើសាររបស់អ្នកក្នុងក្រុម ឬប៉ុស្តិ៍!"> Automatically replies and reacts whenever someone mentions your @username, tags you in a text mention, or replies to your message in any group or supergroup!</span>
+      <strong data-en="🔔 Trigger Condition: Working ONLY when someone mentions you!" data-kh="🔔 លក្ខខណ្ឌដំណើរការ: ដំណើរការតែពេលគេ Mention ឬ Reply មកកាន់អ្នកប៉ុណ្ណោះ!">🔔 Trigger Condition: Working ONLY when someone mentions you!</strong>
+      <div style="margin-top:4px;" data-en="Fires strictly when someone mentions your @username, tags you, or directly replies to your message in the groups/channels below. Normal messages in the group are completely ignored. You can choose text reply only, reaction emoji only, or both!" data-kh="ដំណើរការតែពេលមាននរណាម្នាក់ mention @username របស់អ្នក tag ឈ្មោះ ឬ reply លើសាររបស់អ្នកក្នុងក្រុម/ប៉ុស្តិ៍ខាងក្រោមប៉ុណ្ណោះ។ សារទូទៅក្នុងក្រុមមិនត្រូវបានឆ្លើយឡើយ។ អ្នកអាចកំណត់តែសារឆ្លើយតប តែ react emoji ឬទាំងពីរបាន!">Fires strictly when someone mentions your @username, tags you, or directly replies to your message in the groups/channels below. Normal messages in the group are completely ignored. You can choose text reply only, reaction emoji only, or both!</div>
     </div>
 
     <div class="switch-row">
       <div>
         <strong data-en="Enable Group &amp; Channel Mention Reply" data-kh="បើកការឆ្លើយពេលគេ Mention ក្នុងក្រុម">Enable Group &amp; Channel Mention Reply</strong>
-        <div style="font-size:12px; color:var(--text-dim);" data-en="Replies when someone mentions or replies to you in groups" data-kh="ឆ្លើយតបនៅពេលមានគេ mention ឬ reply មកកាន់អ្នកក្នុងក្រុម">Replies when someone mentions or replies to you in groups</div>
+        <div style="font-size:12px; color:var(--text-dim);" data-en="Replies and/or reacts when someone mentions you in groups" data-kh="ឆ្លើយតប ឬ react emoji នៅពេលមានគេ mention ឬ reply មកកាន់អ្នកក្នុងក្រុម">Replies and/or reacts when someone mentions you in groups</div>
       </div>
       <label class="switch">
         <input type="checkbox" id="mentionRuleActive">
@@ -964,38 +964,54 @@
       </label>
     </div>
 
-    <!-- Group & Channel Scope Selector -->
-    <div class="field" style="margin-bottom:16px;">
-      <label data-en="Apply Mention Auto-Reply to:" data-kh="អនុវត្តការឆ្លើយ Mention ចំពោះ:">Apply Mention Auto-Reply to:</label>
-      <div style="display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;">
-        <button type="button" class="chip active" id="mentionScopeAllBtn" onclick="setMentionScope('all')" data-en="🌐 All Groups &amp; Channels" data-kh="🌐 គ្រប់ក្រុម &amp; ប៉ុស្តិ៍ទាំងអស់">🌐 All Groups &amp; Channels</button>
-        <button type="button" class="chip" id="mentionScopeSelectedBtn" onclick="setMentionScope('selected')" data-en="👥 Only Selected Groups &amp; Channels" data-kh="👥 តែក្រុម &amp; ប៉ុស្តិ៍ដែលបានជ្រើស">👥 Only Selected Groups &amp; Channels</button>
+    <!-- TARGET GROUPS & CHANNELS: SAME FORMAT AS SECTION 01 -->
+    <div style="margin: 18px 0 20px;">
+      <label style="font-size:12px; font-weight:700; color:var(--text); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.04em;" data-en="Target Groups &amp; Channels (Choose Specific or All):" data-kh="ក្រុម &amp; ប៉ុស្តិ៍គោលដៅ (ជ្រើសជាក់លាក់ ឬទាំងអស់):">Target Groups &amp; Channels (Choose Specific or All):</label>
+
+      <!-- Global option card (Exact same style as Section 01) -->
+      <div class="global-card selected" id="mentionGlobalCard" onclick="toggleMentionGlobal()">
+        <div>
+          <strong>🌐 <span data-en="All Groups &amp; Channels (Global Mention)" data-kh="គ្រប់ក្រុម &amp; ប៉ុស្តិ៍ទាំងអស់ (Mention ទូទៅ)">All Groups &amp; Channels (Global Mention)</span></strong>
+          <div style="font-size:12px; color:var(--text-dim); margin-top:2px;" data-en="Applies to any group or channel whenever someone mentions or replies to you." data-kh="ដំណើរការរាល់ពេលមានគេ mention ឬ reply មកកាន់អ្នកក្នុងគ្រប់ក្រុម និងប៉ុស្តិ៍ទាំងអស់របស់អ្នក។">Applies to any group or channel whenever someone mentions or replies to you.</div>
+        </div>
+        <span class="badge checked-badge" id="mentionGlobalBadge" data-en="✓ CHECKED (GLOBAL)" data-kh="✓ បានជ្រើស (ទូទៅ)">✓ CHECKED (GLOBAL)</span>
       </div>
 
-      <!-- Specific groups/channels selection box -->
-      <div id="mentionChatSelectBox" style="display:none; margin-top:12px; background:var(--panel-raised); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
-          <span style="font-size:12px; font-weight:700;" data-en="Check the groups/channels to activate:" data-kh="ធីកជ្រើសរើសក្រុម ឬប៉ុស្តិ៍ដែលត្រូវដំណើរការ:">Check the groups/channels to activate:</span>
-          <div style="display:flex; gap:6px;">
-            <button type="button" class="chip" onclick="selectAllMentionChats()" data-en="Select All" data-kh="ជ្រើសទាំងអស់" style="font-size:11px; padding:3px 10px;">Select All</button>
-            <button type="button" class="chip" onclick="clearMentionChats()" data-en="Clear" data-kh="សម្អាត" style="font-size:11px; padding:3px 10px;">Clear</button>
-          </div>
+      <!-- Filter chips & actions (Exact same style as Section 01) -->
+      <div class="filter-bar">
+        <div class="filter-chips">
+          <button type="button" class="chip active" onclick="setMentionFilter('all', this)" data-en="All" data-kh="ទាំងអស់">All</button>
+          <button type="button" class="chip" onclick="setMentionFilter('group', this)" data-en="👥 Groups" data-kh="👥 ក្រុម">👥 Groups</button>
+          <button type="button" class="chip" onclick="setMentionFilter('channel', this)" data-en="📢 Channels" data-kh="📢 ប៉ុស្តិ៍">📢 Channels</button>
         </div>
-        <input type="text" id="mentionChatSearch" data-en-placeholder="Search groups or channels…" data-kh-placeholder="ស្វែងរកក្រុម ឬប៉ុស្តិ៍…" placeholder="Search groups or channels…" oninput="renderMentionChatList()" style="margin-bottom:8px; font-size:12.5px; padding:7px 10px;">
-        <div id="mentionChatList" style="max-height:190px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; padding-right:4px;">
-          <!-- Loaded groups & channels checkboxes -->
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button type="button" class="chip" onclick="selectAllMentionChats()" data-en="Select all" data-kh="ជ្រើសទាំងអស់">Select all</button>
+          <button type="button" class="chip" onclick="clearMentionChats()" data-en="Clear" data-kh="សម្អាត">Clear</button>
+          <span class="badge checked-badge" id="mentionSelectedCountBadge">✓ All Groups (Global)</span>
         </div>
-        <div id="mentionSelectedCountBadge" style="font-size:11.5px; color:var(--text-dim); margin-top:8px; font-weight:600;">0 selected</div>
+      </div>
+
+      <!-- Search box (Exact same style as Section 01) -->
+      <div class="field" style="margin-bottom:10px;">
+        <input id="mentionChatSearch" type="text" data-en-placeholder="Search groups, channels, or @username…" data-kh-placeholder="ស្វែងរកក្រុម ប៉ុស្តិ៍ ឬ @username…" placeholder="Search groups, channels, or @username…" oninput="filterMentionChats()">
+      </div>
+
+      <!-- Chat List (Exact same style as Section 01: .chat-list) -->
+      <div id="mentionChatList" class="chat-list" style="max-height: 250px;">
+        <div style="padding:16px; text-align:center; color:var(--text-dim);" data-en="Loading groups &amp; channels…" data-kh="កំពុងផ្ទុកក្រុម &amp; ប៉ុស្តិ៍…">Loading groups &amp; channels…</div>
       </div>
     </div>
 
+    <!-- MENTION REPLY TEXT (OPTIONAL IF EMOJI SET) -->
     <div class="field">
-      <label data-en="Mention reply message (use | for rotating variations)" data-kh="សារឆ្លើយ Mention (ប្រើ | សម្រាប់ការបង្វិលសារ)">Mention reply message (use | for rotating variations)</label>
+      <label data-en="Mention reply message (optional - leave blank if you only want emoji reaction)" data-kh="សារឆ្លើយ Mention (ជម្រើស - ទុកទំនេរប្រសិនបើចង់បានតែ react emoji)">Mention reply message (optional - leave blank if you only want emoji reaction)</label>
       <textarea id="mentionReplyText" rows="3" data-en-placeholder="Thanks for mentioning me! I'll get back to you shortly. | Hey! Saw your mention, checking now!" data-kh-placeholder="អរគុណដែលបាន mention ខ្ញុំ! ខ្ញុំនឹងឆ្លើយតបក្នុងពេលឆាប់ៗ។ | សួស្តី! បានឃើញការ mention ហើយ កំពុងពិនិត្យមើល!" placeholder="Thanks for mentioning me! I'll get back to you shortly. | Hey! Saw your mention, checking now!"></textarea>
+      <div style="font-size:12px; color:var(--text-dim); margin-top:4px;" data-en="💡 Tip: Set text reply only, reaction emoji only, or both! Use | for rotating messages." data-kh="💡 គន្លឹះ: អ្នកអាចកំណត់តែសារឆ្លើយតប តែ react emoji ឬទាំងពីរបាន! ប្រើ | សម្រាប់ការបង្វិលសារ។">💡 Tip: Set text reply only, reaction emoji only, or both! Use | for rotating messages.</div>
     </div>
 
+    <!-- NATIVE REACTION EMOJI (OPTIONAL IF TEXT SET) -->
     <div class="field">
-      <label data-en="Native reaction emoji (optional)" data-kh="ប្រតិកម្ម Emoji Telegram (ជម្រើស)">Native reaction emoji (optional)</label>
+      <label data-en="Native reaction emoji (optional - click Clear if you only want text reply)" data-kh="ប្រតិកម្ម Emoji Telegram (ជម្រើស - ចុច Clear បើចង់បានតែសារអត្ថបទ)">Native reaction emoji (optional - click Clear if you only want text reply)</label>
       <div class="emoji-picker" id="mentionEmojiPicker">
         <button type="button" class="emoji-btn" onclick="selectMentionEmoji('👀')">👀</button>
         <button type="button" class="emoji-btn" onclick="selectMentionEmoji('👍')">👍</button>
@@ -1649,7 +1665,7 @@
       if (res.ok) {
         chats = await res.json();
         renderChatList(getFilteredChats());
-        if (typeof renderMentionChatList === 'function' && mentionScope === 'selected') {
+        if (typeof renderMentionChatList === 'function') {
           renderMentionChatList();
         }
       }
@@ -2074,26 +2090,50 @@
     });
   }
 
-  let mentionScope = 'all'; // 'all' or 'selected'
+  let isMentionGlobal = true;
+  let mentionFilter = 'all';
   let mentionSelectedChatIds = new Set();
 
-  function setMentionScope(scope) {
-    mentionScope = scope;
-    const allBtn = document.getElementById('mentionScopeAllBtn');
-    const selBtn = document.getElementById('mentionScopeSelectedBtn');
-    const box = document.getElementById('mentionChatSelectBox');
-    if (allBtn) allBtn.classList.toggle('active', scope === 'all');
-    if (selBtn) selBtn.classList.toggle('active', scope === 'selected');
-    if (box) box.style.display = scope === 'selected' ? 'block' : 'none';
-    if (scope === 'selected') {
-      renderMentionChatList();
+  function toggleMentionGlobal() {
+    isMentionGlobal = !isMentionGlobal;
+    const card = document.getElementById('mentionGlobalCard');
+    const badge = document.getElementById('mentionGlobalBadge');
+    if (isMentionGlobal) {
+      mentionSelectedChatIds.clear();
+      if (card) card.classList.add('selected');
+      if (badge) {
+        badge.textContent = currentLang === 'kh' ? '✓ បានជ្រើស (ទូទៅ)' : '✓ CHECKED (GLOBAL)';
+        badge.className = 'badge checked-badge';
+      }
+    } else {
+      if (card) card.classList.remove('selected');
+      if (badge) {
+        badge.textContent = currentLang === 'kh' ? 'ជ្រើស' : 'Select';
+        badge.className = 'badge muted';
+      }
     }
+    renderMentionChatList();
+    updateMentionSelectedCountUI();
+  }
+
+  function setMentionFilter(type, btn) {
+    mentionFilter = type;
+    document.querySelectorAll('#mentionGlobalCard ~ .filter-bar .chip').forEach(c => c.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderMentionChatList();
+  }
+
+  function filterMentionChats() {
+    renderMentionChatList();
   }
 
   function getMentionFilteredChats() {
     const q = (document.getElementById('mentionChatSearch')?.value || '').trim().toLowerCase();
     return chats.filter(c => {
+      // Must be a group or channel
       if (!c.is_group && !c.is_channel) return false;
+      if (mentionFilter === 'group' && !c.is_group) return false;
+      if (mentionFilter === 'channel' && !c.is_channel) return false;
       if (q) {
         const nameMatch = c.name && c.name.toLowerCase().includes(q);
         const userMatch = c.username && c.username.toLowerCase().includes(q);
@@ -2110,31 +2150,48 @@
     el.innerHTML = '';
     const list = getMentionFilteredChats();
     if (!list.length) {
-      el.innerHTML = `<div style="padding:10px; text-align:center; font-size:12px; color:var(--text-dim);">${currentLang === 'kh' ? 'រកមិនឃើញក្រុម ឬប៉ុស្តិ៍ទេ' : 'No groups or channels found.'}</div>`;
+      el.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-dim);">${currentLang === 'kh' ? 'រកមិនឃើញក្រុម ឬប៉ុស្តិ៍ទេ' : 'No groups or channels found.'}</div>`;
       updateMentionSelectedCountUI();
       return;
     }
+
     list.forEach(c => {
-      const isSelected = mentionSelectedChatIds.has(c.chat_id);
-      const row = document.createElement('label');
-      row.style.cssText = `display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 10px; border-radius:6px; background:${isSelected ? 'var(--accent-dim)' : 'transparent'}; cursor:pointer; font-size:12.5px; border:1px solid ${isSelected ? 'var(--accent)' : 'transparent'}; transition:all .15s;`;
-      
-      const typeBadge = c.is_group ? `<span class="badge group" style="font-size:10px; padding:2px 6px;">👥 Group</span>` : `<span class="badge channel" style="font-size:10px; padding:2px 6px;">📢 Channel</span>`;
-      
+      const isSelected = !isMentionGlobal && mentionSelectedChatIds.has(c.chat_id);
+      const row = document.createElement('div');
+      row.className = 'chat-row' + (isSelected ? ' selected' : '');
+      const typeBadge = c.is_group ? `<span class="badge group">👥 Group</span>` :
+                        `<span class="badge channel">📢 Channel</span>`;
+      const checkedBadge = isSelected ? `<span class="badge checked-badge">✓ ${currentLang === 'kh' ? 'បានជ្រើស' : 'CHECKED'}</span>` : '';
+      const usernameSpan = c.username ? `<span class="chat-username">@${escapeHtml(c.username)}</span>` : '';
+
       row.innerHTML = `
-        <div style="display:flex; align-items:center; gap:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-          <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleMentionChatSelection(${c.chat_id})">
-          <span style="font-weight:600; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name || 'Chat ' + c.chat_id)}</span>
-          ${c.username ? `<span style="font-size:11px; color:var(--text-dim);">@${escapeHtml(c.username)}</span>` : ''}
+        <div class="chat-row-left">
+          <input type="checkbox" class="chat-checkbox" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleMentionChatSelection(${c.chat_id});">
+          <span class="chat-name">${escapeHtml(c.name || 'Chat ' + c.chat_id)}</span>
+          ${usernameSpan}
         </div>
-        <div>${typeBadge}</div>
+        <div class="chat-row-right">
+          ${checkedBadge}
+          ${typeBadge}
+        </div>
       `;
+      row.onclick = () => toggleMentionChatSelection(c.chat_id);
       el.appendChild(row);
     });
     updateMentionSelectedCountUI();
   }
 
   function toggleMentionChatSelection(chatId) {
+    if (isMentionGlobal) {
+      isMentionGlobal = false;
+      const card = document.getElementById('mentionGlobalCard');
+      const badge = document.getElementById('mentionGlobalBadge');
+      if (card) card.classList.remove('selected');
+      if (badge) {
+        badge.textContent = currentLang === 'kh' ? 'ជ្រើស' : 'Select';
+        badge.className = 'badge muted';
+      }
+    }
     if (mentionSelectedChatIds.has(chatId)) {
       mentionSelectedChatIds.delete(chatId);
     } else {
@@ -2144,19 +2201,35 @@
   }
 
   function selectAllMentionChats() {
+    if (isMentionGlobal) {
+      isMentionGlobal = false;
+      const card = document.getElementById('mentionGlobalCard');
+      const badge = document.getElementById('mentionGlobalBadge');
+      if (card) card.classList.remove('selected');
+      if (badge) {
+        badge.textContent = currentLang === 'kh' ? 'ជ្រើស' : 'Select';
+        badge.className = 'badge muted';
+      }
+    }
     getMentionFilteredChats().forEach(c => mentionSelectedChatIds.add(c.chat_id));
     renderMentionChatList();
   }
 
   function clearMentionChats() {
     mentionSelectedChatIds.clear();
+    if (!isMentionGlobal) toggleMentionGlobal();
     renderMentionChatList();
   }
 
   function updateMentionSelectedCountUI() {
     const badge = document.getElementById('mentionSelectedCountBadge');
-    if (badge) {
-      badge.textContent = `${mentionSelectedChatIds.size} ${currentLang === 'kh' ? 'ក្រុម/ប៉ុស្តិ៍ បានជ្រើសរើស' : 'group(s)/channel(s) selected'}`;
+    if (!badge) return;
+    if (isMentionGlobal) {
+      badge.textContent = currentLang === 'kh' ? '✓ ក្រុមទាំងអស់ (ទូទៅ)' : '✓ All Groups (Global)';
+      badge.className = 'badge checked-badge';
+    } else {
+      badge.textContent = `${mentionSelectedChatIds.size} ${currentLang === 'kh' ? 'បានជ្រើស' : 'checked'}`;
+      badge.className = mentionSelectedChatIds.size > 0 ? 'badge checked-badge' : 'badge muted';
     }
   }
 
@@ -2174,12 +2247,25 @@
         selectMentionEmoji(r.reaction_emoji || '');
 
         mentionSelectedChatIds.clear();
+        const card = document.getElementById('mentionGlobalCard');
+        const badge = document.getElementById('mentionGlobalBadge');
         if (r.target_chats && Array.isArray(r.target_chats) && r.target_chats.length > 0) {
+          isMentionGlobal = false;
           r.target_chats.forEach(id => mentionSelectedChatIds.add(id));
-          setMentionScope('selected');
+          if (card) card.classList.remove('selected');
+          if (badge) {
+            badge.textContent = currentLang === 'kh' ? 'ជ្រើស' : 'Select';
+            badge.className = 'badge muted';
+          }
         } else {
-          setMentionScope('all');
+          isMentionGlobal = true;
+          if (card) card.classList.add('selected');
+          if (badge) {
+            badge.textContent = currentLang === 'kh' ? '✓ បានជ្រើស (ទូទៅ)' : '✓ CHECKED (GLOBAL)';
+            badge.className = 'badge checked-badge';
+          }
         }
+        renderMentionChatList();
       }
     } catch(e) { console.error(e); }
   }
@@ -2192,10 +2278,15 @@
     const delay_seconds = parseInt(document.getElementById('mentionDelay').value) || 0;
     const cooldown_seconds = parseInt(document.getElementById('mentionCooldown').value) || 0;
 
+    if (active && !reply_text && !reaction_emoji) {
+      alert(currentLang === 'kh' ? 'សូមកំណត់សារឆ្លើយតប ឬ Emoji ប្រតិកម្ម (យ៉ាងហោចណាស់មួយ)' : 'Set a reply message, a reaction emoji, or both.');
+      return;
+    }
+
     let target_chats = null;
-    if (mentionScope === 'selected') {
+    if (!isMentionGlobal) {
       if (mentionSelectedChatIds.size === 0) {
-        alert(currentLang === 'kh' ? 'សូមជ្រើសរើសក្រុម ឬប៉ុស្តិ៍យ៉ាងហោចណាស់ 1 ឬជ្រើសរើស "គ្រប់ក្រុម & ប៉ុស្តិ៍ទាំងអស់"' : 'Please select at least one group/channel, or choose "All Groups & Channels".');
+        alert(currentLang === 'kh' ? 'សូមជ្រើសរើសក្រុម ឬប៉ុស្តិ៍យ៉ាងហោចណាស់ 1 ឬជ្រើសរើស "All Groups & Channels (Global)"' : 'Please select at least one group/channel, or choose "All Groups & Channels (Global)".');
         return;
       }
       target_chats = Array.from(mentionSelectedChatIds);
@@ -2211,7 +2302,8 @@
         alert(currentLang === 'kh' ? 'ការឆ្លើយ Group Mention ត្រូវបានរក្សាទុកជោគជ័យ!' : 'Group Mention auto-reply saved successfully!');
         loadStats();
       } else {
-        alert('Failed to save mention rule');
+        const err = await res.json();
+        alert(err.detail || 'Failed to save mention rule');
       }
     } catch(e) { alert(e.message); }
   }
