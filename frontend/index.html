@@ -85,7 +85,7 @@
     transition: background .2s, color .2s;
   }
 
-  input, select, textarea {
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea {
     font-size: 16px !important; /* CRITICAL: 16px prevents iOS Safari auto-zoom */
     font-family: 'Inter', 'Noto Sans Khmer', sans-serif;
     background: var(--panel);
@@ -100,7 +100,7 @@
     -webkit-appearance: none;
     appearance: none;
   }
-  input:focus, select:focus, textarea:focus {
+  input:not([type="checkbox"]):not([type="radio"]):focus, select:focus, textarea:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-dim);
   }
@@ -321,8 +321,17 @@
   .chat-username { font-size: 11.5px; color: var(--text-dim); margin-left: 4px; }
   
   .chat-checkbox {
-    width: 20px; height: 20px; min-height: 20px; border-radius: 4px;
-    accent-color: var(--accent); cursor: pointer; margin: 0; padding: 0; flex-shrink: 0;
+    -webkit-appearance: auto !important;
+    appearance: auto !important;
+    width: 20px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 4px;
+    accent-color: var(--accent) !important;
+    cursor: pointer;
+    flex-shrink: 0;
   }
 
   .badge {
@@ -355,7 +364,30 @@
     align-items: center; justify-content: center; cursor: pointer; transition: all .15s;
   }
   .emoji-btn:hover { border-color: var(--accent); transform: scale(1.08); }
-  .emoji-btn.selected { border-color: var(--accent); background: var(--accent-dim); box-shadow: 0 0 0 2px var(--accent); }
+  .emoji-btn.selected {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    box-shadow: 0 0 0 2px var(--accent);
+    position: relative;
+  }
+  .emoji-btn.selected::after {
+    content: "✓";
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--accent);
+    color: #000;
+    font-size: 10px;
+    font-weight: 900;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    line-height: 1;
+  }
   .emoji-btn.clear-btn { font-size: 12px; font-weight: 700; width: auto; padding: 0 10px; color: var(--text-dim); }
   .emoji-btn.browse-all-btn {
     width: auto; padding: 0 12px; font-size: 12px; font-weight: 700;
@@ -1023,6 +1055,16 @@
         <button type="button" class="emoji-btn clear-btn" onclick="selectMentionEmoji('')" data-en="Clear" data-kh="សម្អាត">Clear</button>
       </div>
       <input type="hidden" id="mentionReactionEmoji" value="">
+
+      <!-- Selected Emoji Indicator with Checked Icon -->
+      <div id="mentionEmojiSelectedPill" style="display:none; align-items:center; gap:8px; margin-top:8px;">
+        <span style="font-size:12px; font-weight:700; color:var(--text-dim);" data-en="Active Reaction:" data-kh="ប្រតិកម្មដែលបានជ្រើស:">Active Reaction:</span>
+        <span class="preview-pill" style="border-color:var(--accent); background:var(--accent-dim); color:var(--accent); padding:4px 10px;">
+          <span style="font-size:14px; font-weight:900; color:var(--accent);">✓</span>
+          <span id="mentionEmojiChar" style="font-size:18px; margin:0 2px;"></span>
+          <span style="font-size:11.5px; font-weight:700; text-transform:uppercase;" data-en="Selected" data-kh="បានជ្រើស">Selected</span>
+        </span>
+      </div>
     </div>
 
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -1979,20 +2021,73 @@
   async function loadRules() {
     if (!userId) return;
     try {
-      const res = await apiFetch(`${API_BASE}/users/${userId}/rules`);
-      const rules = await res.json();
-      renderRules(rules);
+      const [rulesRes, mentionRes] = await Promise.all([
+        apiFetch(`${API_BASE}/users/${userId}/rules`),
+        apiFetch(`${API_BASE}/users/${userId}/mention-rule`).catch(() => null)
+      ]);
+      const rules = await rulesRes.json();
+      let mentionRule = null;
+      if (mentionRes && mentionRes.ok) {
+        mentionRule = await mentionRes.json();
+      }
+      renderRules(rules, mentionRule);
+      loadLogs();
+      loadStats();
     } catch(e) { console.error(e); }
   }
 
-  function renderRules(rules) {
+  function renderRules(rules, mentionRule) {
     const el = document.getElementById('rulesList');
-    document.getElementById('rulesCountBadge').textContent = rules.length;
+    const hasMentionTask = mentionRule && (mentionRule.reply_text || mentionRule.reaction_emoji || mentionRule.active);
+    const totalCount = rules.length + (hasMentionTask ? 1 : 0);
+    document.getElementById('rulesCountBadge').textContent = totalCount;
     el.innerHTML = '';
-    if (!rules.length) {
+    if (!rules.length && !hasMentionTask) {
       el.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-dim);">${currentLang === 'kh' ? 'មិនទាន់មានច្បាប់នៅឡើយទេ។' : 'No rules created yet.'}</div>`;
       return;
     }
+
+    // Section 05: Group Mention Auto-Reply rendered as a primary task
+    if (hasMentionTask) {
+      const mCard = document.createElement('div');
+      mCard.className = 'rule-card' + (mentionRule.active ? ' active-rule' : '');
+      mCard.style.borderLeft = '4px solid var(--accent2)';
+      mCard.style.background = mentionRule.active ? 'rgba(99, 102, 241, 0.08)' : 'var(--panel)';
+
+      let targetLabel = currentLang === 'kh' ? 'គ្រប់ក្រុម & ប៉ុស្តិ៍ទាំងអស់ (Global)' : 'All Groups & Channels (Global)';
+      if (mentionRule.target_chats && Array.isArray(mentionRule.target_chats) && mentionRule.target_chats.length > 0) {
+        targetLabel = `${mentionRule.target_chats.length} ${currentLang === 'kh' ? 'ក្រុម/ប៉ុស្តិ៍បានជ្រើស' : 'Groups/Channels Selected'}`;
+      }
+
+      const replyContent = mentionRule.reply_text ? escapeHtml(mentionRule.reply_text) : `<em style="color:var(--text-dim);">${currentLang === 'kh' ? '(ប្រតិកម្ម Emoji តែប៉ុណ្ណោះ)' : '(Reaction only)'}</em>`;
+
+      mCard.innerHTML = `
+        <div class="rule-card-header">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <div class="rule-chat">🌐 ${escapeHtml(targetLabel)}</div>
+              <span class="badge" style="background:rgba(99, 102, 241, 0.22); color:#818cf8; font-weight:700; font-size:11px;">⚡ SECTION 05 TASK</span>
+            </div>
+            <div class="rule-meta" style="margin-top:6px;">
+              <span class="badge group">@ Mention / Reply Trigger</span>
+              ${mentionRule.reaction_emoji ? `<span class="badge checked-badge" style="font-size:12px; font-weight:700;">✓ React ${escapeHtml(mentionRule.reaction_emoji)}</span>` : ''}
+              <span class="badge muted">${mentionRule.delay_seconds || 0}s delay</span>
+              <span class="badge muted">${mentionRule.cooldown_seconds !== undefined ? mentionRule.cooldown_seconds : 30}s cd</span>
+            </div>
+          </div>
+          <label class="switch" title="Toggle Section 05 Mention Auto-Reply">
+            <input type="checkbox" ${mentionRule.active ? 'checked' : ''} onchange="toggleMentionTaskActive(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="rule-body" style="margin-top:8px;">${replyContent}</div>
+        <div class="rule-actions" style="margin-top:10px;">
+          <button class="secondary" style="font-size:12px; padding:5px 12px;" onclick="scrollToSection05()" data-en="⚙️ Edit in Section 05" data-kh="⚙️ កែប្រែក្នុងផ្នែក 05">⚙️ Edit in Section 05</button>
+        </div>
+      `;
+      el.appendChild(mCard);
+    }
+
     rules.forEach(r => {
       const card = document.createElement('div');
       card.className = 'rule-card' + (r.active ? ' active-rule' : '');
@@ -2025,6 +2120,27 @@
       `;
       el.appendChild(card);
     });
+  }
+
+  async function toggleMentionTaskActive(active) {
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/mention-rule/active?active=${active}`, { method: 'PATCH' });
+      if (res.ok) {
+        document.getElementById('mentionRuleActive').checked = active;
+        loadRules();
+        loadStats();
+      } else {
+        const err = await res.json();
+        alert(err.detail || 'Failed to toggle mention task');
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  function scrollToSection05() {
+    const el = document.getElementById('mentionRuleActive');
+    if (el) {
+      el.closest('section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   async function toggleRuleActive(ruleId, active) {
@@ -2083,11 +2199,22 @@
 
   // ---------- Section 05: Group & Channel Mention Rule ----------
   function selectMentionEmoji(emoji) {
-    document.getElementById('mentionReactionEmoji').value = emoji;
+    document.getElementById('mentionReactionEmoji').value = emoji || '';
     document.querySelectorAll('#mentionEmojiPicker .emoji-btn').forEach(btn => {
       if (btn.classList.contains('clear-btn') || btn.classList.contains('browse-all-btn')) return;
       btn.classList.toggle('selected', btn.textContent === emoji);
     });
+    const pill = document.getElementById('mentionEmojiSelectedPill');
+    const char = document.getElementById('mentionEmojiChar');
+    if (pill && char) {
+      if (emoji) {
+        char.textContent = emoji;
+        pill.style.display = 'inline-flex';
+      } else {
+        pill.style.display = 'none';
+        char.textContent = '';
+      }
+    }
   }
 
   let isMentionGlobal = true;
@@ -2300,6 +2427,7 @@
       });
       if (res.ok) {
         alert(currentLang === 'kh' ? 'ការឆ្លើយ Group Mention ត្រូវបានរក្សាទុកជោគជ័យ!' : 'Group Mention auto-reply saved successfully!');
+        loadRules();
         loadStats();
       } else {
         const err = await res.json();
@@ -2601,9 +2729,15 @@
         return;
       }
       el.innerHTML = logs.map(l => `
-        <div style="padding:8px 0; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between;">
-          <div><strong style="color:var(--text);">${escapeHtml(l.chat_name || 'Chat')}</strong>: <span style="color:var(--text-dim);">${escapeHtml(l.message_snippet)}</span></div>
-          <span style="font-size:11px; color:var(--text-dim);">${new Date(l.replied_at * 1000).toLocaleTimeString()}</span>
+        <div style="padding:10px 0; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+          <div style="flex:1;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px; flex-wrap:wrap;">
+              <strong style="color:var(--text); font-size:13.5px;">${escapeHtml(l.chat_name || 'Chat')}</strong>
+              ${l.action_desc ? `<span class="badge" style="background:var(--accent-dim); color:var(--accent); font-weight:700; font-size:11px; padding:2px 8px; border:1px solid rgba(0, 210, 186, 0.3);">${escapeHtml(l.action_desc)}</span>` : ''}
+            </div>
+            <div style="color:var(--text-dim); font-size:13px; line-height:1.4; word-break:break-word;">${escapeHtml(l.message_snippet || '')}</div>
+          </div>
+          <span style="font-size:11px; color:var(--text-dim); white-space:nowrap; padding-top:2px;">${new Date(l.replied_at * 1000).toLocaleTimeString()}</span>
         </div>
       `).join('');
     } catch(e) { console.error(e); }
@@ -2688,6 +2822,14 @@
   // Initial Boot
   applyLang(currentLang);
   checkAuth();
+
+  // Auto-refresh activity logs and stats in background every 10 seconds
+  setInterval(() => {
+    if (userId) {
+      loadLogs();
+      loadStats();
+    }
+  }, 10000);
 </script>
 </body>
 </html>

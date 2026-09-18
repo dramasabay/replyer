@@ -123,12 +123,24 @@ def init_db():
     c.execute("""
     CREATE TABLE IF NOT EXISTS logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        rule_id INTEGER NOT NULL,
+        rule_id INTEGER,
         message_snippet TEXT,
         replied_at REAL NOT NULL,
+        user_id INTEGER,
+        chat_name TEXT,
+        action_desc TEXT,
         FOREIGN KEY (rule_id) REFERENCES rules(id)
     )
     """)
+
+    c.execute("PRAGMA table_info(logs)")
+    log_cols = {row[1] for row in c.fetchall()}
+    if "user_id" not in log_cols:
+        c.execute("ALTER TABLE logs ADD COLUMN user_id INTEGER")
+    if "chat_name" not in log_cols:
+        c.execute("ALTER TABLE logs ADD COLUMN chat_name TEXT")
+    if "action_desc" not in log_cols:
+        c.execute("ALTER TABLE logs ADD COLUMN action_desc TEXT")
 
     conn.commit()
     conn.close()
@@ -233,8 +245,8 @@ def list_all_users_with_stats():
             u.last_active_at,
             (SELECT COUNT(*) FROM rules WHERE rules.user_id = u.id AND active = 1) AS active_rules,
             (SELECT COUNT(*) FROM logs
-                JOIN rules ON logs.rule_id = rules.id
-                WHERE rules.user_id = u.id) AS total_replies
+                LEFT JOIN rules ON logs.rule_id = rules.id
+                WHERE rules.user_id = u.id OR logs.user_id = u.id) AS total_replies
         FROM users u
         ORDER BY u.created_at DESC
     """)
@@ -502,12 +514,26 @@ def get_mention_rule(user_id):
 
 # ---------- Logs ----------
 
-def add_log(rule_id, message_snippet):
+def add_log(rule_id=None, message_snippet="", user_id=None, chat_name=None, action_desc=None):
     conn = get_conn()
     c = conn.cursor()
+    if rule_id and not user_id:
+        c.execute("SELECT user_id, chat_name, reply_text, reaction_emoji FROM rules WHERE id = ?", (rule_id,))
+        r = c.fetchone()
+        if r:
+            user_id = r["user_id"]
+            if not chat_name:
+                chat_name = r["chat_name"]
+            if not action_desc:
+                actions = []
+                if r["reaction_emoji"]:
+                    actions.append(f"Reacted {r['reaction_emoji']}")
+                if r["reply_text"]:
+                    actions.append("Replied text")
+                action_desc = " + ".join(actions) if actions else "Replied"
     c.execute(
-        "INSERT INTO logs (rule_id, message_snippet, replied_at) VALUES (?, ?, ?)",
-        (rule_id, message_snippet[:200], time.time()),
+        "INSERT INTO logs (rule_id, message_snippet, replied_at, user_id, chat_name, action_desc) VALUES (?, ?, ?, ?, ?, ?)",
+        (rule_id, (message_snippet or "")[:200], time.time(), user_id, chat_name, action_desc),
     )
     conn.commit()
     conn.close()
@@ -522,8 +548,8 @@ def admin_overview():
                (SELECT COUNT(*) FROM rules WHERE rules.user_id = users.id) as rule_count,
                (SELECT COUNT(*) FROM rules WHERE rules.user_id = users.id AND rules.active = 1) as active_rule_count,
                (SELECT COUNT(*) FROM logs
-                  JOIN rules ON logs.rule_id = rules.id
-                  WHERE rules.user_id = users.id) as reply_count
+                  LEFT JOIN rules ON logs.rule_id = rules.id
+                  WHERE rules.user_id = users.id OR logs.user_id = users.id) as reply_count
         FROM users
         ORDER BY users.created_at DESC
     """)
@@ -544,11 +570,15 @@ def list_logs(user_id, limit=100):
     conn = get_conn()
     c = conn.cursor()
     c.execute(
-        """SELECT logs.*, rules.chat_name, rules.reply_text FROM logs
-           JOIN rules ON logs.rule_id = rules.id
-           WHERE rules.user_id = ?
+        """SELECT logs.id, logs.rule_id, logs.message_snippet, logs.replied_at,
+                  COALESCE(logs.chat_name, rules.chat_name, 'Unknown Chat') AS chat_name,
+                  COALESCE(logs.action_desc, rules.reply_text, 'Auto-replied') AS action_desc,
+                  COALESCE(rules.reply_text, logs.action_desc) AS reply_text
+           FROM logs
+           LEFT JOIN rules ON logs.rule_id = rules.id
+           WHERE logs.user_id = ? OR rules.user_id = ?
            ORDER BY logs.replied_at DESC LIMIT ?""",
-        (user_id, limit),
+        (user_id, user_id, limit),
     )
     rows = [dict(r) for r in c.fetchall()]
     conn.close()

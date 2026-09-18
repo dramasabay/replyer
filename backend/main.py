@@ -488,6 +488,27 @@ async def save_mention_rule(user_id: int, body: MentionRuleBody, current_user: d
     return {"status": "ok"}
 
 
+@app.patch("/users/{user_id}/mention-rule/active")
+async def toggle_mention_rule_active(user_id: int, active: bool, current_user: dict = Depends(get_current_user)):
+    if current_user["id"] != user_id:
+        raise HTTPException(status_code=403, detail="Forbidden.")
+    rule = db.get_mention_rule(user_id)
+    if not rule:
+        raise HTTPException(status_code=404, detail="Mention rule not configured.")
+    db.upsert_mention_rule(
+        user_id=user_id,
+        reply_text=rule.get("reply_text"),
+        reaction_emoji=rule.get("reaction_emoji"),
+        delay_seconds=rule.get("delay_seconds", 0),
+        cooldown_seconds=rule.get("cooldown_seconds", 30),
+        active=active,
+        target_chats=rule.get("target_chats"),
+    )
+    if active:
+        await worker.start_watching(user_id)
+    return {"status": "ok", "active": active}
+
+
 @app.get("/users/{user_id}/mention-rule")
 async def read_mention_rule(user_id: int, current_user: dict = Depends(get_current_user)):
     if current_user["id"] != user_id:

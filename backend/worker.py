@@ -32,12 +32,25 @@ _watching_clients = {}
 
 async def send_reaction(client, chat_id, message_id, emoji, input_chat=None):
     """Telethon has no high-level send_reaction() method — this uses the
-    raw API call directly. Uses input_chat when available to prevent entity lookup errors."""
-    peer = input_chat if input_chat is not None else chat_id
+    raw API call directly. Resolves input entity safely to prevent entity lookup errors."""
+    if not emoji:
+        return
+    target = input_chat if input_chat is not None else chat_id
+    resolved_peer = target
+    try:
+        resolved_peer = await client.get_input_entity(target)
+    except Exception:
+        try:
+            resolved_peer = await client.get_input_entity(chat_id)
+        except Exception:
+            pass
+
     try:
         await client(functions.messages.SendReactionRequest(
-            peer=peer,
+            peer=resolved_peer,
             msg_id=message_id,
+            big=True,
+            add_to_recent=True,
             reaction=[types.ReactionEmoji(emoticon=emoji)],
         ))
     except Exception as e:
@@ -255,21 +268,46 @@ async def start_watching(user_id: int):
                 await asyncio.sleep(delay)
 
             # Send reply message
+            replied_any = False
             if default.get("reply_text"):
                 reply_text = pick_reply_text(default["reply_text"])
                 if reply_text:
                     try:
                         await event.reply(reply_text)
+                        replied_any = True
                     except Exception as e:
                         print(f"Default event.reply failed: {e}, falling back to send_message")
                         try:
                             await client.send_message(chat_id, reply_text)
+                            replied_any = True
                         except Exception as e2:
                             print(f"Default send_message failed: {e2}")
 
             # Send reaction if set
+            reacted_any = False
             if default.get("reaction_emoji"):
                 await send_reaction(client, chat_id, event.message.id, default["reaction_emoji"], input_chat=input_chat)
+                reacted_any = True
+
+            # Log away reply activity
+            action_parts = []
+            if reacted_any and default.get("reaction_emoji"):
+                action_parts.append(f"Reacted {default['reaction_emoji']}")
+            if replied_any:
+                action_parts.append("Replied text")
+            action_desc = " + ".join(action_parts) if action_parts else "Away auto-replied"
+
+            chat_title = None
+            try:
+                sender = await event.get_sender()
+                if sender:
+                    chat_title = f"{getattr(sender, 'first_name', '') or ''} {getattr(sender, 'last_name', '') or ''}".strip() or getattr(sender, 'username', None)
+            except Exception:
+                pass
+            if not chat_title:
+                chat_title = f"DM ({chat_id})"
+
+            db.add_log(rule_id=None, message_snippet=raw_text, user_id=user_id, chat_name=chat_title, action_desc=action_desc)
 
         # Helper for Group & Channel Mention Auto-Reply
         async def try_fire_mention_reply():
@@ -302,21 +340,46 @@ async def start_watching(user_id: int):
                 await asyncio.sleep(delay)
 
             # Send reply message
+            replied_any = False
             if mention_cfg.get("reply_text"):
                 reply_text = pick_reply_text(mention_cfg["reply_text"])
                 if reply_text:
                     try:
                         await event.reply(reply_text)
+                        replied_any = True
                     except Exception as e:
                         print(f"Mention event.reply failed: {e}, falling back to send_message")
                         try:
                             await client.send_message(chat_id, reply_text)
+                            replied_any = True
                         except Exception as e2:
                             print(f"Mention send_message failed: {e2}")
 
             # Send reaction if set
+            reacted_any = False
             if mention_cfg.get("reaction_emoji"):
                 await send_reaction(client, chat_id, event.message.id, mention_cfg["reaction_emoji"], input_chat=input_chat)
+                reacted_any = True
+
+            # Log this mention auto-reply activity
+            action_parts = []
+            if reacted_any and mention_cfg.get("reaction_emoji"):
+                action_parts.append(f"Reacted {mention_cfg['reaction_emoji']}")
+            if replied_any:
+                action_parts.append("Replied text")
+            action_desc = " + ".join(action_parts) if action_parts else "Mention auto-replied"
+
+            chat_title = None
+            try:
+                chat_obj = await event.get_chat()
+                if chat_obj:
+                    chat_title = getattr(chat_obj, 'title', None) or getattr(chat_obj, 'username', None)
+            except Exception:
+                pass
+            if not chat_title:
+                chat_title = f"Group/Channel ({chat_id})"
+
+            db.add_log(rule_id=None, message_snippet=raw_text, user_id=user_id, chat_name=chat_title, action_desc=action_desc)
 
         # 1. Fetch active rules for this chat
         rules = db.get_rules_for_chat(user_id, chat_id)
@@ -377,7 +440,7 @@ async def start_watching(user_id: int):
             if rule.get("reaction_emoji"):
                 await send_reaction(client, chat_id, event.message.id, rule["reaction_emoji"], input_chat=input_chat)
 
-            db.add_log(rule_id, raw_text)
+            db.add_log(rule_id, raw_text, user_id=user_id, chat_name=rule.get("chat_name"))
 
     _watching_clients[user_id] = client
 
