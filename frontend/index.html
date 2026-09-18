@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Replyer — Smart Telegram Auto-Reply | broteach.com</title>
+
+<!-- SEO & Metadata -->
+<meta name="description" content="Replyer — Automated Telegram replies directly from your personal account. 1-on-1 account away replies, group auto-replies, keyword triggers, and native emoji reactions. Powered by broteach.com">
+<meta name="keywords" content="telegram auto reply, telegram away message, telegram automation, broteach telegram replyer, telegram group auto responder">
+<meta name="author" content="broteach.com">
+<meta property="og:title" content="Replyer — Smart Telegram Auto-Reply System">
+<meta property="og:description" content="Intelligent automated responses directly from your personal Telegram account. Powered by broteach.com">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Replyer">
+
+<!-- Modern SVG Telegram Paper Plane Favicon -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2300D2BA'/%3E%3Cstop offset='100%25' stop-color='%236366F1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='120' cy='120' r='120' fill='url(%23g)'/%3E%3Cpath fill='%23ffffff' d='M54 116l118-47c5-2 11 2 9 8l-20 95c-1 6-8 9-13 5l-33-25-16 16c-3 3-8 2-9-3l-7-34-31-10c-5-2-5-9 2-11zm44 23l54-34-43 39 4 23 10-10 26 20 15-72-90 36 24 8z'/%3E%3C/svg%3E">
+
+<!-- Google Fonts: Inter & Noto Sans Khmer -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0B0E14;
+    --panel: #141824;
+    --panel-raised: #1C2232;
+    --border: #262E42;
+    --border-subtle: #1C2333;
+    --text: #F1F5F9;
+    --text-dim: #8B95A5;
+    --text-muted: #576275;
+    --accent: #00D2BA;
+    --accent-dim: rgba(0, 210, 186, 0.12);
+    --accent-glow: rgba(0, 210, 186, 0.28);
+    --accent2: #6366F1;
+    --tg-blue: #2AABEE;
+    --pending: #F59E0B;
+    --danger: #EF4444;
+    --danger-dim: rgba(239, 68, 68, 0.14);
+    --success: #10B981;
+    --success-dim: rgba(16, 185, 129, 0.14);
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.35);
+    --shadow-sm: 0 2px 10px rgba(0,0,0,0.2);
+    --topbar-h: 64px;
+    --bottomnav-h: 64px;
+  }
+  [data-theme="light"] {
+    --bg: #F4F6FB;
+    --panel: #FFFFFF;
+    --panel-raised: #EDF1F7;
+    --border: #D8DFEC;
+    --border-subtle: #E8EDF5;
+    --text: #0F172A;
+    --text-dim: #64748B;
+    --text-muted: #94A3B8;
+    --accent: #00B49E;
+    --accent-dim: rgba(0, 180, 158, 0.10);
+    --accent-glow: rgba(0, 180, 158, 0.20);
+    --accent2: #4F46E5;
+    --tg-blue: #229ED9;
+    --pending: #D97706;
+    --danger: #DC2626;
+    --danger-dim: rgba(220, 38, 38, 0.10);
+    --success: #059669;
+    --success-dim: rgba(5, 150, 105, 0.10);
+    --shadow: 0 4px 20px rgba(0,0,0,0.06);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', 'Noto Sans Khmer', -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow-x: hidden;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+    transition: background .2s, color .2s;
+  }
+
+  input, select, textarea {
+    font-size: 16px !important; /* CRITICAL: 16px prevents iOS Safari auto-zoom */
+    font-family: 'Inter', 'Noto Sans Khmer', sans-serif;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    width: 100%;
+    transition: border-color .15s, box-shadow .15s;
+    min-height: 44px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  textarea { min-height: 90px; resize: vertical; line-height: 1.5; }
+  label { font-size: 12px; font-weight: 600; color: var(--text-dim); display: block; margin-bottom: 6px; letter-spacing: 0.02em; }
+  .field { margin-bottom: 16px; }
+
+  /* ── Modern Topbar ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    height: var(--topbar-h);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(11, 14, 20, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  [data-theme="light"] .topbar {
+    background: rgba(244, 246, 251, 0.88);
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 800; font-size: 18px; letter-spacing: -0.3px;
+    user-select: none; cursor: pointer; text-decoration: none; color: var(--text);
+  }
+  .brand-logo-wrap {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 12px var(--accent-glow);
+    flex-shrink: 0;
+  }
+  .brand-logo-wrap svg { width: 20px; height: 20px; fill: #fff; }
+  .brand-text-block { display: flex; flex-direction: column; }
+  .brand-title { font-size: 16px; font-weight: 800; letter-spacing: 0.02em; line-height: 1.1; }
+  .brand-sub { font-size: 10px; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; text-transform: uppercase; }
+
+  .topnav { display: flex; gap: 4px; }
+  .topnav button {
+    background: none; border: none; color: var(--text-dim);
+    font-family: 'Inter', 'Noto Sans Khmer', sans-serif;
+    font-size: 14px; font-weight: 600; cursor: pointer; padding: 7px 14px; border-radius: 8px;
+    transition: all .15s;
+  }
+  .topnav button:hover { color: var(--text); background: var(--panel-raised); }
+  .topnav button.active { color: var(--accent); background: var(--accent-dim); font-weight: 700; }
+  .top-actions { display: flex; align-items: center; gap: 8px; }
+
+  /* Dual Segmented Flag Switcher */
+  .lang-switcher {
+    display: inline-flex; align-items: center;
+    background: var(--panel-raised); border: 1px solid var(--border);
+    border-radius: 20px; padding: 2px;
+  }
+  .lang-opt {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: transparent; border: none; border-radius: 16px;
+    padding: 5px 10px; font-size: 12px; font-weight: 700;
+    color: var(--text-dim); cursor: pointer; transition: all .15s;
+    user-select: none; font-family: 'Inter', 'Noto Sans Khmer', sans-serif;
+  }
+  .lang-opt:hover { color: var(--text); }
+  .lang-opt.active {
+    background: var(--panel); color: var(--accent);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+  }
+  .flag-icon { width: 18px; height: 13px; border-radius: 2px; flex-shrink: 0; display: inline-block; vertical-align: middle; }
+
+  .topbar-user-pill {
+    display: none; align-items: center; gap: 6px;
+    background: var(--panel-raised); border: 1px solid var(--border);
+    border-radius: 16px; padding: 4px 10px; font-size: 12px; font-weight: 600;
+  }
+
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: 10px; background: var(--panel-raised);
+    border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px; transition: all .15s; flex-shrink: 0;
+  }
+  .icon-btn:hover { border-color: var(--accent); }
+
+  /* ── Layout & Screens ── */
+  .screen { display: none; max-width: 960px; margin: 0 auto; padding: 32px 20px 60px; }
+  .screen.active { display: block; animation: fadeIn .2s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 36px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+  }
+  .hero .kicker {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--accent-dim); color: var(--accent);
+    border-radius: 20px; padding: 5px 14px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.05em;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: clamp(28px, 5vw, 44px); line-height: 1.15;
+    margin: 0 0 16px; max-width: 680px; font-weight: 800; letter-spacing: -0.03em;
+  }
+  .hero p { color: var(--text-dim); font-size: 16px; max-width: 560px; line-height: 1.6; margin: 0 0 24px; }
+  .feature-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 40px;
+  }
+  .feature {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .feature:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); }
+  .feature .num { color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .feature h3 { margin: 0 0 6px; font-size: 15px; font-weight: 700; }
+  .feature p { margin: 0; color: var(--text-dim); font-size: 13px; line-height: 1.55; }
+
+  /* ── Blocks & Cards ── */
+  .block {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px; margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+  }
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .section-label {
+    background: var(--accent-dim); color: var(--accent);
+    font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px;
+  }
+  .section-title { font-size: 16px; font-weight: 700; color: var(--text); margin: 0; }
+  .desc { color: var(--text-dim); font-size: 13px; margin: 0 0 18px; line-height: 1.5; }
+
+  /* ── Status badge ── */
+  .status-line {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 600; color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+  .dot.connected { background: var(--success); box-shadow: 0 0 8px var(--success); }
+
+  /* ── Buttons ── */
+  button.action {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; border: none; padding: 13px 20px; border-radius: var(--radius-sm);
+    font-family: 'Inter', 'Noto Sans Khmer', sans-serif; font-size: 14px; font-weight: 700;
+    cursor: pointer; width: 100%; transition: all .2s;
+    box-shadow: 0 2px 14px var(--accent-glow);
+  }
+  button.action:hover { opacity: .92; transform: translateY(-1px); }
+  button.action:active { transform: translateY(0); }
+  button.secondary {
+    background: var(--panel-raised); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 14px; border-radius: var(--radius-sm);
+    font-family: 'Inter', 'Noto Sans Khmer', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .15s;
+  }
+  button.secondary:hover { border-color: var(--accent); color: var(--accent); }
+  button.danger {
+    background: transparent; border: 1px solid var(--danger); color: var(--danger);
+    padding: 8px 14px; border-radius: var(--radius-sm);
+    font-family: 'Inter', 'Noto Sans Khmer', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .15s;
+  }
+  button.danger:hover { background: var(--danger-dim); }
+
+  /* ── Filter Bar & Chips ── */
+  .filter-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px; margin-bottom: 12px;
+  }
+  .filter-chips {
+    display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .chip {
+    background: var(--panel-raised); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 600;
+    color: var(--text-dim); cursor: pointer; white-space: nowrap; transition: all .15s;
+    font-family: 'Inter', 'Noto Sans Khmer', sans-serif;
+  }
+  .chip:hover { color: var(--text); border-color: var(--text-muted); }
+  .chip.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+
+  /* ── Chat List & Checked Display ── */
+  .global-card {
+    background: var(--panel-raised); border: 2px dashed var(--border);
+    border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; transition: all .15s;
+  }
+  .global-card:hover { border-color: var(--accent); }
+  .global-card.selected {
+    background: var(--accent-dim);
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+  .chat-list {
+    max-height: 300px; overflow-y: auto; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); background: var(--bg);
+  }
+  .chat-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer; transition: background .12s, border-color .12s; user-select: none;
+  }
+  .chat-row:last-child { border-bottom: none; }
+  .chat-row:hover { background: var(--panel-raised); }
+  .chat-row.selected {
+    background: var(--accent-dim);
+    border-left: 4px solid var(--accent);
+  }
+  .chat-row-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+  .chat-row-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .chat-name { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chat-username { font-size: 11.5px; color: var(--text-dim); margin-left: 4px; }
+  
+  .chat-checkbox {
+    width: 20px; height: 20px; min-height: 20px; border-radius: 4px;
+    accent-color: var(--accent); cursor: pointer; margin: 0; padding: 0; flex-shrink: 0;
+  }
+
+  .badge {
+    font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 12px;
+    text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
+  }
+  .badge.dm { background: rgba(0, 210, 186, 0.15); color: var(--accent); }
+  .badge.group { background: rgba(99, 102, 241, 0.15); color: var(--accent2); }
+  .badge.channel { background: rgba(245, 158, 11, 0.15); color: var(--pending); }
+  .badge.muted { background: var(--panel-raised); color: var(--text-dim); border: 1px solid var(--border); }
+  
+  .badge.checked-badge {
+    background: var(--accent); color: #000; font-weight: 800;
+    box-shadow: 0 0 10px var(--accent-glow);
+  }
+
+  /* ── Quick Add Chat Box ── */
+  .quick-add-box {
+    background: var(--panel-raised); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px;
+    display: none;
+  }
+  .quick-add-box.active { display: block; animation: fadeIn .15s ease; }
+
+  /* ── Emoji selector ── */
+  .emoji-picker { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+  .emoji-btn {
+    width: 38px; height: 38px; border-radius: 8px; background: var(--panel-raised);
+    border: 1px solid var(--border); font-size: 18px; display: flex;
+    align-items: center; justify-content: center; cursor: pointer; transition: all .15s;
+  }
+  .emoji-btn:hover { border-color: var(--accent); transform: scale(1.08); }
+  .emoji-btn.selected { border-color: var(--accent); background: var(--accent-dim); box-shadow: 0 0 0 2px var(--accent); }
+  .emoji-btn.clear-btn { font-size: 12px; font-weight: 700; width: auto; padding: 0 10px; color: var(--text-dim); }
+
+  /* ── Callout / Tip ── */
+  .callout {
+    border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px;
+    line-height: 1.5; margin-bottom: 14px;
+  }
+  .callout.accent { background: var(--accent-dim); border-left: 3px solid var(--accent); color: var(--text); }
+  .callout.warning { background: rgba(245, 158, 11, 0.12); border-left: 3px solid var(--pending); color: var(--text); }
+  .dm-only-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(0, 210, 186, 0.15); color: var(--accent);
+    border: 1px solid rgba(0, 210, 186, 0.35); border-radius: 20px;
+    padding: 3px 10px; font-size: 11px; font-weight: 800; letter-spacing: 0.04em;
+  }
+
+  /* ── Toggle Switch ── */
+  .switch-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; background: var(--panel-raised); border-radius: var(--radius-sm);
+    border: 1px solid var(--border); margin-bottom: 16px;
+  }
+  .switch {
+    position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; cursor: pointer; top:0; left:0; right:0; bottom:0;
+    background: var(--border); transition: .2s; border-radius: 24px;
+  }
+  .slider:before {
+    position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+    background: white; transition: .2s; border-radius: 50%;
+  }
+  input:checked + .slider { background: var(--accent); }
+  input:checked + .slider:before { transform: translateX(20px); }
+
+  /* ── Rule Cards ── */
+  .rule-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px;
+    border-left: 4px solid var(--text-muted); transition: all .15s;
+  }
+  .rule-card.active-rule { border-left-color: var(--success); }
+  .rule-card-header {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+    margin-bottom: 10px;
+  }
+  .rule-chat { font-size: 14px; font-weight: 700; color: var(--text); }
+  .rule-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+  .rule-body {
+    background: var(--panel-raised); border-radius: 6px; padding: 10px 12px;
+    font-size: 13px; line-height: 1.45; margin-bottom: 12px; word-break: break-word;
+  }
+  .rule-actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
+
+  /* ── Stats Grid ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+  .stat-cell {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 16px; text-align: center;
+  }
+  .stat-cell .val {
+    font-size: 24px; font-weight: 800; color: var(--accent); margin-bottom: 4px;
+  }
+  .stat-cell .lbl { font-size: 11px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.04em; }
+
+  /* ── Admin Screen & Controls ── */
+  .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .admin-table th, .admin-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+  .admin-table th { color: var(--text-dim); font-weight: 700; font-size: 11px; text-transform: uppercase; }
+  .status-badge {
+    padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: 700;
+  }
+  .status-badge.approved { background: var(--success-dim); color: var(--success); }
+  .status-badge.blocked { background: var(--danger-dim); color: var(--danger); }
+
+  /* ── Guide / Tutorial Steps ── */
+  .guide-step {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px; margin-bottom: 18px;
+    box-shadow: var(--shadow-sm);
+  }
+  .guide-step-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+  }
+  .guide-step-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; font-weight: 800; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .guide-step-title { font-size: 16px; font-weight: 700; margin: 0; color: var(--text); }
+  .guide-step p { color: var(--text-dim); font-size: 13.5px; line-height: 1.6; margin: 0 0 12px; }
+  .guide-subbox {
+    background: var(--panel-raised); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm); padding: 14px; margin-top: 10px;
+    font-size: 13px; line-height: 1.55;
+  }
+  .guide-subbox ol, .guide-subbox ul { margin: 6px 0 0 18px; padding: 0; }
+  .guide-subbox li { margin-bottom: 6px; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; z-index: 100;
+    padding: 16px;
+  }
+  .modal-overlay.active { display: flex; animation: fadeIn .15s ease; }
+  .modal-box {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); width: 100%; max-width: 520px;
+    max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: var(--shadow);
+  }
+  .modal-title { font-size: 17px; font-weight: 700; margin: 0 0 16px; }
+
+  /* ── Modern Footer by broteach.com ── */
+  .site-footer {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 36px 20px 80px;
+    margin-top: 40px;
+  }
+  .footer-inner {
+    max-width: 960px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 20px;
+  }
+  .footer-left { display: flex; flex-direction: column; gap: 6px; }
+  .footer-brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 16px; }
+  .footer-logo {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+  }
+  .footer-logo svg { width: 14px; height: 14px; fill: #fff; }
+  .footer-desc { font-size: 12.5px; color: var(--text-dim); margin: 0; max-width: 420px; }
+  .footer-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .footer-brand-link {
+    color: var(--accent); text-decoration: none; font-weight: 700;
+  }
+  .footer-brand-link:hover { text-decoration: underline; }
+  .footer-copy { font-size: 12px; color: var(--text-dim); }
+
+  /* ── Floating Overlay Telegram Chat Button ── */
+  .floating-tg-chat {
+    position: fixed; right: 20px; bottom: 85px; z-index: 90;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; user-select: none;
+  }
+  .floating-tg-btn {
+    width: 54px; height: 54px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--tg-blue), #0088cc);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 18px rgba(42, 171, 238, 0.45);
+    color: #fff; transition: all .2s; border: none; outline: none;
+  }
+  .floating-tg-btn:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(42, 171, 238, 0.6); }
+  .floating-tg-btn svg { width: 28px; height: 28px; fill: #fff; margin-right: 2px; }
+  .floating-tg-tooltip {
+    background: var(--panel); border: 1px solid var(--border);
+    color: var(--text); padding: 6px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 700; box-shadow: var(--shadow-sm);
+    white-space: nowrap; pointer-events: none;
+  }
+
+  .tg-support-modal {
+    position: fixed; right: 20px; bottom: 150px; z-index: 95;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); width: 310px; box-shadow: var(--shadow);
+    padding: 18px; display: none; animation: fadeIn .2s ease;
+  }
+  .tg-support-modal.active { display: block; }
+  .tg-support-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .tg-support-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+
+  /* ── Bottom Nav (Mobile) ── */
+  .bottomnav {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 45;
+    height: calc(var(--bottomnav-h) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: rgba(11, 14, 20, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    align-items: center; justify-content: space-around;
+  }
+  [data-theme="light"] .bottomnav {
+    background: rgba(244, 246, 251, 0.94);
+  }
+  .bottomnav button {
+    background: none; border: none; color: var(--text-dim);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; padding: 6px 8px; cursor: pointer; flex: 1; height: 100%;
+    font-family: 'Inter', 'Noto Sans Khmer', sans-serif; font-size: 10px; font-weight: 600;
+    transition: color .15s;
+  }
+  .bottomnav button svg { width: 20px; height: 20px; stroke-width: 2; }
+  .bottomnav button.active { color: var(--accent); }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .topnav { display: none; }
+    .bottomnav { display: flex; }
+    .feature-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .screen { padding: 18px 14px calc(var(--bottomnav-h) + 20px); }
+    .hero { padding: 24px 0 28px; }
+    .site-footer { padding: 28px 16px calc(var(--bottomnav-h) + 80px); }
+    .footer-inner { flex-direction: column; align-items: flex-start; }
+    .footer-right { align-items: flex-start; }
+    .floating-tg-chat { bottom: 75px; right: 14px; }
+    .tg-support-modal { right: 14px; bottom: 140px; width: calc(100vw - 28px); max-width: 320px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= TOPBAR ================= -->
+<header class="topbar">
+  <a class="brand" onclick="goTo('home')">
+    <div class="brand-logo-wrap">
+      <svg viewBox="0 0 240 240">
+        <path d="M54 116l118-47c5-2 11 2 9 8l-20 95c-1 6-8 9-13 5l-33-25-16 16c-3 3-8 2-9-3l-7-34-31-10c-5-2-5-9 2-11zm44 23l54-34-43 39 4 23 10-10 26 20 15-72-90 36 24 8z"/>
+      </svg>
+    </div>
+    <div class="brand-text-block">
+      <div class="brand-title">REPLYER</div>
+      <div class="brand-sub">Auto-Reply System</div>
+    </div>
+  </a>
+
+  <!-- Top Navigation (Desktop) -->
+  <nav class="topnav">
+    <button data-screen="home" class="active" onclick="goTo('home')" data-en="Home" data-kh="ទំព័រដើម">Home</button>
+    <button data-screen="auto" onclick="goTo('auto')" data-en="Auto-Reply" data-kh="ឆ្លើយស្វ័យប្រវត្តិ">Auto-Reply</button>
+    <button data-screen="guide" onclick="goTo('guide')" data-en="Guide" data-kh="មគ្គុទ្ទេសក៍">Guide</button>
+    <button data-screen="admin" id="adminNavTop" style="display:none;" onclick="goTo('admin')" data-en="Admin" data-kh="គ្រប់គ្រង">Admin</button>
+    <button data-screen="login" id="authNavTop" onclick="goTo('login')" data-en="Account" data-kh="គណនី">Account</button>
+  </nav>
+
+  <div class="top-actions">
+    <!-- User status pill in topbar -->
+    <div class="topbar-user-pill" id="topbarUserPill">
+      <span class="dot connected"></span>
+      <span id="topbarUserName" style="max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Online</span>
+    </div>
+
+    <!-- Dual Segmented Flag Switcher -->
+    <div class="lang-switcher" title="Switch Language">
+      <button class="lang-opt" id="langOptEN" onclick="applyLang('en')">
+        <span class="flag-icon" id="flagUS"></span> EN
+      </button>
+      <button class="lang-opt" id="langOptKH" onclick="applyLang('kh')">
+        <span class="flag-icon" id="flagKH"></span> KH
+      </button>
+    </div>
+
+    <!-- Theme Toggle -->
+    <button class="icon-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle Dark/Light">🌙</button>
+  </div>
+</header>
+
+<!-- ================= HOME SCREEN ================= -->
+<div class="screen active" id="screen-home">
+  <section class="hero">
+    <div class="kicker" data-en="TELEGRAM AUTOMATION" data-kh="ស្វ័យប្រវត្តិកម្ម TELEGRAM">TELEGRAM AUTOMATION</div>
+    <h1 data-en="Smart auto-replies, directly from your Telegram account." data-kh="ការឆ្លើយតបស្វ័យប្រវត្តិ ពីគណនី Telegram ផ្ទាល់ខ្លួនរបស់អ្នក។">Smart auto-replies, directly from your Telegram account.</h1>
+    <p data-en="Never miss important messages. Set instant realtime away replies for personal chats, auto-replies for specific groups, keyword triggers, and natural reactions." data-kh="មិនដែលខកខានសារសំខាន់ៗឡើយ។ កំណត់ការឆ្លើយ Away ក្នុងពេលជាក់ស្តែងសម្រាប់ chat ផ្ទាល់ខ្លួន ឆ្លើយស្វ័យប្រវត្តិតាមក្រុម ពាក្យគន្លឹះ និងប្រតិកម្ម emoji ធម្មជាតិ។">Never miss important messages. Set instant realtime away replies for personal chats, auto-replies for specific groups, keyword triggers, and natural reactions.</p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="action" style="width:auto; padding:12px 24px;" onclick="goTo('auto')" data-en="Open Auto-Reply Rules" data-kh="បើកផ្ទាំងច្បាប់ឆ្លើយស្វ័យប្រវត្តិ">Open Auto-Reply Rules</button>
+      <button class="secondary" style="padding:12px 20px;" onclick="goTo('guide')" data-en="View User Guide" data-kh="មើលមគ្គុទ្ទេសក៍">View User Guide</button>
+    </div>
+  </section>
+
+  <div class="feature-grid">
+    <div class="feature">
+      <div class="num">01</div>
+      <h3 data-en="Target Any Chat or Group" data-kh="កំណត់លើ Chat ឬក្រុមណាមួយ">Target Any Chat or Group</h3>
+      <p data-en="Apply rules globally, to private DMs, or to specific groups and channels with instant search and selection." data-kh="អនុវត្តច្បាប់ជាសកល ចំពោះ DM ផ្ទាល់ខ្លួន ឬក្រុម និងប៉ុស្តិ៍ជាក់លាក់ជាមួយនឹងការស្វែងរកភ្លាមៗ។">Apply rules globally, to private DMs, or to specific groups and channels with instant search and selection.</p>
+    </div>
+    <div class="feature">
+      <div class="num">02</div>
+      <h3 data-en="Keyword & Sender Triggers" data-kh="លក្ខខណ្ឌពាក្យគន្លឹះ & អ្នកផ្ញើ">Keyword & Sender Triggers</h3>
+      <p data-en="Reply when specific people text you, or when messages contain target keywords (with AND/OR matching)." data-kh="ឆ្លើយតបនៅពេលមនុស្សជាក់លាក់ផ្ញើសារមកអ្នក ឬពេលសារមានពាក្យគន្លឹះគោលដៅ (គាំទ្រទាំង AND/OR)។">Reply when specific people text you, or when messages contain target keywords (with AND/OR matching).</p>
+    </div>
+    <div class="feature">
+      <div class="num">03</div>
+      <h3 data-en="Native Emoji Reactions" data-kh="ប្រតិកម្ម Emoji ធម្មជាតិ">Native Emoji Reactions</h3>
+      <p data-en="React with Telegram's official emoji reactions (👍, ❤️, 🔥) alongside or instead of text." data-kh="ប្រតិកម្មជាមួយ emoji ផ្លូវការរបស់ Telegram (👍, ❤️, 🔥) ជាមួយ ឬជំនួសអត្ថបទ។">React with Telegram's official emoji reactions (👍, ❤️, 🔥) alongside or instead of text.</p>
+    </div>
+    <div class="feature">
+      <div class="num">04</div>
+      <h3 data-en="Realtime DM Away Reply" data-kh="ឆ្លើយ Away គណនីផ្ទាល់ Realtime">Realtime DM Away Reply</h3>
+      <p data-en="Instant account-to-account away replies. Strictly fires only for 1-on-1 private chats, never groups or channels." data-kh="ការឆ្លើយ Away គណនីទល់គណនីភ្លាមៗ។ ដំណើរការតែចំពោះ Chat ឯកជន 1-ទល់-1 ប៉ុណ្ណោះ មិនប៉ះពាល់ក្រុម ឬប៉ុស្តិ៍ឡើយ។">Instant account-to-account away replies. Strictly fires only for 1-on-1 private chats, never groups or channels.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= AUTO-REPLY SCREEN ================= -->
+<div class="screen" id="screen-auto">
+  <div id="status" class="status-line"><span class="dot"></span><span data-en="Checking connection…" data-kh="កំពុងពិនិត្យការតភ្ជាប់…">Checking connection…</span></div>
+
+  <!-- SECTION 01: CHAT SELECTION -->
+  <section class="block">
+    <div class="section-header">
+      <span class="section-label">01</span>
+      <h2 class="section-title" data-en="CHOOSE CHAT(S) OR GLOBAL" data-kh="ជ្រើសរើស CHAT ឬទូទៅ">CHOOSE CHAT(S) OR GLOBAL</h2>
+    </div>
+    <p class="desc" data-en="Select one or multiple chats, or apply globally across all your chats." data-kh="ជ្រើសរើស chat មួយ ឬច្រើន ឬអនុវត្តជាសកលលើ chat ទាំងអស់របស់អ្នក។">Select one or multiple chats, or apply globally across all your chats.</p>
+
+    <!-- Global option card -->
+    <div class="global-card" id="globalChatCard" onclick="toggleGlobalSelection()">
+      <div>
+        <strong>🌐 <span data-en="All Chats (Global Rule)" data-kh="Chat ទាំងអស់ (ច្បាប់ទូទៅ)">All Chats (Global Rule)</span></strong>
+        <div style="font-size:12px; color:var(--text-dim); margin-top:2px;" data-en="Applies to all incoming messages across all your chats &amp; groups." data-kh="អនុវត្តចំពោះសារចូលទាំងអស់ក្នុង chat និងក្រុមទាំងអស់របស់អ្នក។">Applies to all incoming messages across all your chats &amp; groups.</div>
+      </div>
+      <span class="badge muted" id="globalBadge" data-en="Select" data-kh="ជ្រើស">Select</span>
+    </div>
+
+    <!-- Filter chips & actions -->
+    <div class="filter-bar">
+      <div class="filter-chips">
+        <button type="button" class="chip active" onclick="setChatFilter('all', this)" data-en="All" data-kh="ទាំងអស់">All</button>
+        <button type="button" class="chip" onclick="setChatFilter('dm', this)" data-en="👤 DMs" data-kh="👤 គណនីផ្ទាល់">👤 DMs</button>
+        <button type="button" class="chip" onclick="setChatFilter('group', this)" data-en="👥 Groups" data-kh="👥 ក្រុម">👥 Groups</button>
+        <button type="button" class="chip" onclick="setChatFilter('channel', this)" data-en="📢 Channels" data-kh="📢 ប៉ុស្តិ៍">📢 Channels</button>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <button type="button" class="chip" onclick="selectAllFilteredChats()" data-en="Select all" data-kh="ជ្រើសទាំងអស់">Select all</button>
+        <button type="button" class="chip" onclick="clearSelectedChats()" data-en="Clear" data-kh="សម្អាត">Clear</button>
+        <button type="button" class="chip" onclick="toggleQuickAdd()" data-en="+ Add ID / @" data-kh="+ បន្ថែម ID / @">+ Add ID / @</button>
+        <span class="badge muted" id="selectedCountBadge">0 selected</span>
+      </div>
+    </div>
+
+    <!-- Quick Add Chat by ID or @username -->
+    <div class="quick-add-box" id="quickAddBox">
+      <label data-en="Add Group, Channel, or User by ID or @username:" data-kh="បន្ថែមក្រុម ប៉ុស្តិ៍ ឬអ្នកប្រើប្រាស់តាម ID ឬ @username:">Add Group, Channel, or User by ID or @username:</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="customChatInput" placeholder="e.g. -100123456789 or @channel_username" style="flex:1;">
+        <button type="button" class="secondary" onclick="resolveAndAddChat()" style="white-space:nowrap;" data-en="Find &amp; Add" data-kh="ស្វែងរក &amp; បន្ថែម">Find &amp; Add</button>
+      </div>
+      <div id="quickAddMsg" style="font-size:12px; margin-top:6px;"></div>
+    </div>
+
+    <!-- Search box -->
+    <div class="field" style="margin-bottom:10px;">
+      <input id="chatSearch" type="text" data-en-placeholder="Search chats, groups, channels, or @username…" data-kh-placeholder="ស្វែងរក chat ក្រុម ប៉ុស្តិ៍ ឬ @username…" placeholder="Search chats, groups, channels, or @username…" oninput="filterChats()">
+    </div>
+
+    <!-- Chat List -->
+    <div id="chatList" class="chat-list">
+      <div style="padding:16px; text-align:center; color:var(--text-dim);" data-en="Loading chats…" data-kh="កំពុងផ្ទុក chats…">Loading chats…</div>
+    </div>
+  </section>
+
+  <!-- SECTION 02: SET THE RULE -->
+  <section class="block" id="ruleSection" style="display:none;">
+    <div class="section-header">
+      <span class="section-label">02</span>
+      <h2 class="section-title" data-en="SET THE RULE" data-kh="កំណត់ច្បាប់">SET THE RULE</h2>
+    </div>
+    <div id="targetSummaryCard" class="callout accent" style="margin-bottom:16px;">
+      <span data-en="Target:" data-kh="គោលដៅ:">Target:</span> <strong id="targetSummaryText">—</strong>
+    </div>
+
+    <div class="field">
+      <label data-en="When to reply" data-kh="ពេលណាត្រូវឆ្លើយ">When to reply</label>
+      <select id="triggerType" onchange="onTriggerChange()">
+        <option value="all" data-en="All incoming messages" data-kh="សារចូលទាំងអស់">All incoming messages</option>
+        <option value="sender" data-en="From specific sender(s)" data-kh="ពីអ្នកផ្ញើជាក់លាក់">From specific sender(s)</option>
+        <option value="keyword" data-en="Message contains keyword(s)" data-kh="សារមានពាក្យគន្លឹះជាក់លាក់">Message contains keyword(s)</option>
+      </select>
+    </div>
+
+    <div class="field" id="senderField" style="display:none;">
+      <label data-en="Select group member or enter sender ID" data-kh="ជ្រើសសមាជិកក្រុម ឬបញ្ចូល ID អ្នកផ្ញើ">Select group member or enter sender ID</label>
+      <select id="senderSelect"></select>
+      <div style="font-size:12px; color:var(--text-dim); margin-top:4px;"><span data-en="Or type sender ID (comma-separated):" data-kh="ឬបញ្ចូល ID អ្នកផ្ញើ (បំបែកដោយសញ្ញាក្បៀស):">Or type sender ID (comma-separated):</span></div>
+      <input id="customSenderId" type="text" placeholder="e.g. 12345678, 87654321" style="margin-top:4px;">
+    </div>
+
+    <div class="field" id="keywordField" style="display:none;">
+      <label data-en="Keywords (comma or line separated)" data-kh="ពាក្យគន្លឹះ (បំបែកដោយក្បៀស ឬចុះបន្ទាត់)">Keywords (comma or line separated)</label>
+      <input id="keyword" type="text" data-en-placeholder="e.g. price, support, help, buy" data-kh-placeholder="ឧ. តម្លៃ, ជំនួយ, help, ទិញ" placeholder="e.g. price, support, help, buy">
+      <div style="margin-top:8px;">
+        <label data-en="Match Mode:" data-kh="របៀបផ្ទៀងផ្ទាត់:">Match Mode:</label>
+        <select id="matchMode">
+          <option value="any" data-en="Any keyword matches (OR)" data-kh="ត្រូវនឹងពាក្យណាមួយក៏បាន (OR)">Any keyword matches (OR)</option>
+          <option value="all" data-en="All keywords must match (AND)" data-kh="ត្រូវតែត្រូវនឹងគ្រប់ពាក្យ (AND)">All keywords must match (AND)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- SECTION 03: REPLY & REACTION -->
+    <div style="border-top:1px solid var(--border); padding-top:16px; margin-top:16px;">
+      <div class="section-header">
+        <span class="section-label">03</span>
+        <h2 class="section-title" data-en="REPLY &amp; REACTION" data-kh="សារឆ្លើយតប &amp; ប្រតិកម្ម">REPLY &amp; REACTION</h2>
+      </div>
+
+      <div class="field">
+        <label data-en="Reply message (use | for random rotating messages)" data-kh="អត្ថបទឆ្លើយ (ប្រើ | សម្រាប់ការបង្វិលសារចៃដន្យ)">Reply message (use | for random rotating messages)</label>
+        <textarea id="replyText" rows="3" data-en-placeholder="Hello! | Thanks for reaching out | Will reply shortly" data-kh-placeholder="សួស្តី! | អរគុណសម្រាប់ការទាក់ទង | នឹងឆ្លើយតបក្នុងពេលឆាប់ៗ" placeholder="Hello! | Thanks for reaching out | Will reply shortly"></textarea>
+      </div>
+
+      <div class="field">
+        <label data-en="Native reaction emoji (optional)" data-kh="ប្រតិកម្ម Emoji Telegram (ជម្រើស)">Native reaction emoji (optional)</label>
+        <div class="emoji-picker">
+          <button type="button" class="emoji-btn" onclick="selectEmoji('👍')">👍</button>
+          <button type="button" class="emoji-btn" onclick="selectEmoji('❤️')">❤️</button>
+          <button type="button" class="emoji-btn" onclick="selectEmoji('🔥')">🔥</button>
+          <button type="button" class="emoji-btn" onclick="selectEmoji('👏')">👏</button>
+          <button type="button" class="emoji-btn" onclick="selectEmoji('🎉')">🎉</button>
+          <button type="button" class="emoji-btn" onclick="selectEmoji('⚡')">⚡</button>
+          <button type="button" class="emoji-btn" onclick="selectEmoji('🙏')">🙏</button>
+          <button type="button" class="emoji-btn clear-btn" onclick="selectEmoji('')" data-en="Clear" data-kh="សម្អាត">Clear</button>
+        </div>
+        <input type="hidden" id="reactionEmoji" value="">
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="field">
+          <label data-en="Delay in seconds (0 = Realtime Instant)" data-kh="ពន្យារពេល (0 = Realtime ភ្លាមៗ)">Delay in seconds (0 = Realtime Instant)</label>
+          <input id="delay" type="number" value="0" min="0">
+        </div>
+        <div class="field">
+          <label data-en="Cooldown in seconds (0 = No cooldown)" data-kh="Cooldown គិតជាវិនាទី (0 = គ្មាន)">Cooldown in seconds (0 = No cooldown)</label>
+          <input id="cooldown" type="number" value="0" min="0">
+        </div>
+      </div>
+
+      <button class="action" onclick="createRule()" data-en="Create Rule" data-kh="បង្កើតច្បាប់">Create Rule</button>
+    </div>
+  </section>
+
+  <!-- ACTIVE RULES LIST -->
+  <section class="block">
+    <div class="section-header" style="justify-content:space-between;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <h2 class="section-title" data-en="ACTIVE RULES" data-kh="ច្បាប់សកម្ម">ACTIVE RULES</h2>
+        <span class="badge dm" id="rulesCountBadge">0</span>
+      </div>
+      <button class="secondary" style="font-size:12px; padding:4px 10px;" onclick="loadRules()" data-en="Refresh" data-kh="ផ្ទុកឡើងវិញ">Refresh</button>
+    </div>
+    <div id="rulesList" style="margin-top:14px;">
+      <div style="padding:16px; text-align:center; color:var(--text-dim);" data-en="No rules created yet." data-kh="មិនទាន់មានច្បាប់នៅឡើយទេ។">No rules created yet.</div>
+    </div>
+  </section>
+
+  <!-- SECTION 04: AWAY / DEFAULT REPLY (ACCOUNT-TO-ACCOUNT DM ONLY) -->
+  <section class="block" style="border: 2px solid rgba(0, 210, 186, 0.4);">
+    <div class="section-header" style="justify-content:space-between; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="section-label" style="background:var(--accent); color:#000;">04</span>
+        <h2 class="section-title" data-en="AWAY / DEFAULT REPLY" data-kh="ការឆ្លើយតប AWAY / ទូទៅ">AWAY / DEFAULT REPLY</h2>
+      </div>
+      <span class="dm-only-badge">📱 <span data-en="1-on-1 Account DM Only" data-kh="គណនីទល់គណនីប៉ុណ្ណោះ">1-on-1 Account DM Only</span></span>
+    </div>
+
+    <div class="callout accent" style="margin-top:10px;">
+      <strong data-en="⚡ Realtime Account-to-Account Only:" data-kh="⚡ គណនីទល់គណនីក្នុងពេលជាក់ស្តែងប៉ុណ្ណោះ:">⚡ Realtime Account-to-Account Only:</strong>
+      <span data-en=" This away reply triggers ONLY when someone messages your personal account directly in a private 1-on-1 chat. Groups, supergroups, broadcast channels, and bots are completely ignored." data-kh=" ការឆ្លើយ Away នេះដំណើរការតែនៅពេលមាននរណាម្នាក់ផ្ញើសារផ្ទាល់ខ្លួន 1-ទល់-1 មកកាន់គណនីរបស់អ្នកប៉ុណ្ណោះ។ ក្រុម, supergroups, ប៉ុស្តិ៍ និង bots នឹងមិនត្រូវបានឆ្លើយតបឡើយ។"> This away reply triggers ONLY when someone messages your personal account directly in a private 1-on-1 chat. Groups, supergroups, broadcast channels, and bots are completely ignored.</span>
+    </div>
+
+    <div class="switch-row">
+      <div>
+        <strong data-en="Enable DM Away Reply" data-kh="បើកការឆ្លើយ DM Away">Enable DM Away Reply</strong>
+        <div style="font-size:12px; color:var(--text-dim);" data-en="Replies when you have no specific rule for the sender" data-kh="ឆ្លើយតបនៅពេលអ្នកមិនមានច្បាប់ជាក់លាក់សម្រាប់អ្នកផ្ញើ">Replies when you have no specific rule for the sender</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="defaultRuleActive">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="field">
+      <label data-en="Away reply message (use | for rotating variations)" data-kh="សារឆ្លើយ Away (ប្រើ | សម្រាប់ការបង្វិលសារ)">Away reply message (use | for rotating variations)</label>
+      <textarea id="defaultReplyText" rows="3" data-en-placeholder="Hey, I'm away right now — I'll reply to your message as soon as I'm back!" data-kh-placeholder="សួស្តី ខ្ញុំកំពុងរវល់បន្តិច — ខ្ញុំនឹងឆ្លើយតបសាររបស់អ្នកភ្លាមៗនៅពេលខ្ញុំត្រឡប់មកវិញ!" placeholder="Hey, I'm away right now — I'll reply to your message as soon as I'm back!"></textarea>
+    </div>
+
+    <div class="field">
+      <label data-en="Native reaction emoji (optional)" data-kh="ប្រតិកម្ម Emoji Telegram (ជម្រើស)">Native reaction emoji (optional)</label>
+      <div class="emoji-picker">
+        <button type="button" class="emoji-btn" onclick="selectDefaultEmoji('👍')">👍</button>
+        <button type="button" class="emoji-btn" onclick="selectDefaultEmoji('❤️')">❤️</button>
+        <button type="button" class="emoji-btn" onclick="selectDefaultEmoji('🔥')">🔥</button>
+        <button type="button" class="emoji-btn" onclick="selectDefaultEmoji('🙏')">🙏</button>
+        <button type="button" class="emoji-btn clear-btn" onclick="selectDefaultEmoji('')" data-en="Clear" data-kh="សម្អាត">Clear</button>
+      </div>
+      <input type="hidden" id="defaultReactionEmoji" value="">
+    </div>
+
+    <div class="field">
+      <label data-en="Delay in seconds (0 = Realtime Instant)" data-kh="ពន្យារពេល (0 = Realtime ភ្លាមៗ)">Delay in seconds (0 = Realtime Instant)</label>
+      <input id="defaultDelay" type="number" value="0" min="0" style="max-width:200px;">
+    </div>
+
+    <button class="action" onclick="saveDefaultRule()" data-en="Save DM Away Reply" data-kh="រក្សាទុកការឆ្លើយ DM Away">Save DM Away Reply</button>
+  </section>
+
+  <!-- TEST SIMULATOR -->
+  <section class="block">
+    <div class="section-header">
+      <h2 class="section-title" data-en="TEST SIMULATOR" data-kh="តេស្តសាកល្បង">TEST SIMULATOR</h2>
+    </div>
+    <p class="desc" data-en="Simulate an incoming message to test your rules &amp; away reply in realtime." data-kh="សាកល្បងសារចូលដើម្បីតេស្តច្បាប់ និង away reply របស់អ្នកក្នុងពេលជាក់ស្តែង។">Simulate an incoming message to test your rules &amp; away reply in realtime.</p>
+    <div class="field">
+      <label data-en="Chat" data-kh="Chat">Chat</label>
+      <select id="simChatSelect">
+        <option value="0" data-en="All Chats (Global)" data-kh="Chat ទាំងអស់ (ទូទៅ)">All Chats (Global)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label data-en="Sender ID (optional)" data-kh="ID អ្នកផ្ញើ (ជម្រើស)">Sender ID (optional)</label>
+      <input id="simSenderId" type="text" placeholder="e.g. 12345678">
+    </div>
+    <div class="field">
+      <label data-en="Incoming message text" data-kh="អត្ថបទសារចូល">Incoming message text</label>
+      <input id="simMessageText" type="text" data-en-placeholder="Type a test message…" data-kh-placeholder="បញ្ចូលសារសាកល្បង…" placeholder="Type a test message…">
+    </div>
+    <button class="secondary" onclick="runSimulation()" style="width:100%;" data-en="Test Simulation" data-kh="ដំណើរការតេស្ត">Test Simulation</button>
+    <div id="simResult" style="margin-top:12px; font-size:13px;"></div>
+  </section>
+
+  <!-- RECENT ACTIVITY LOGS -->
+  <section class="block">
+    <div class="section-header">
+      <h2 class="section-title" data-en="RECENT REPLIES" data-kh="ការឆ្លើយតបថ្មីៗ">RECENT REPLIES</h2>
+    </div>
+    <div id="logsList" style="font-size:13px; color:var(--text-dim);">
+      <div style="padding:10px 0;" data-en="No replies logged yet." data-kh="មិនទាន់មានកំណត់ត្រាការឆ្លើយតបនៅឡើយទេ។">No replies logged yet.</div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= USER GUIDE SCREEN ================= -->
+<div class="screen" id="screen-guide">
+  <div class="section-header" style="margin-bottom: 2px;">
+    <span class="section-label" data-en="DOCUMENTATION &amp; TUTORIAL" data-kh="ឯកសារណែនាំ &amp; មេរៀន">DOCUMENTATION &amp; TUTORIAL</span>
+  </div>
+  <h1 style="font-size: clamp(24px, 4vw, 34px); margin: 6px 0 10px; font-weight:800;" data-en="How to Use Replyer" data-kh="របៀបប្រើប្រាស់ Replyer">How to Use Replyer</h1>
+  <p class="desc" style="font-size:15px; margin-bottom:28px;" data-en="Follow this step-by-step tutorial to connect your Telegram account, create automated reply rules, and secure your personal account." data-kh="ធ្វើតាមការណែនាំជាជំហានៗនេះ ដើម្បីភ្ជាប់គណនី Telegram របស់អ្នក បង្កើតច្បាប់ឆ្លើយស្វ័យប្រវត្តិ និងការពារសុវត្ថិភាពគណនីរបស់អ្នក។">Follow this step-by-step tutorial to connect your Telegram account, create automated reply rules, and secure your personal account.</p>
+
+  <!-- Step 1 Card -->
+  <div class="guide-step">
+    <div class="guide-step-header">
+      <div class="guide-step-num">1</div>
+      <h2 class="guide-step-title" data-en="Get Your Telegram API Credentials" data-kh="យក API ID និង API Hash ពី Telegram">Get Your Telegram API Credentials</h2>
+    </div>
+    <p data-en="Telegram requires every custom automation to have its own unique API ID and API Hash from the official Telegram developer portal. This guarantees your automation uses your own quota and remains safe." data-kh="Telegram តម្រូវឱ្យស្វ័យប្រវត្តិកម្មនីមួយៗមាន API ID និង API Hash ផ្ទាល់ខ្លួនពីគេហទំព័រផ្លូវការ Telegram។ ការណ៍នេះធានាសុវត្ថិភាព និងមិនប្រើកូតារួមគ្នាជាមួយអ្នកដទៃ។">Telegram requires every custom automation to have its own unique API ID and API Hash from the official Telegram developer portal. This guarantees your automation uses your own quota and remains safe.</p>
+    <div class="guide-subbox">
+      <strong data-en="Quick Instructions:" data-kh="ការណែនាំរហ័ស:">Quick Instructions:</strong>
+      <ol>
+        <li><span data-en="Open" data-kh="បើក">Open</span> <a href="https://my.telegram.org" target="_blank" rel="noopener" style="color:var(--accent); font-weight:700;">https://my.telegram.org</a> <span data-en="and log in with your Telegram phone number." data-kh="ហើយចូលដោយប្រើលេខទូរស័ព្ទ Telegram របស់អ្នក។">and log in with your Telegram phone number.</span></li>
+        <li><span data-en="Click on" data-kh="ចុចលើ">Click on</span> <strong>API development tools</strong>.</li>
+        <li><span data-en="Fill in App title (e.g. 'MyReplyer') and Short name (e.g. 'replyer'). Click Create application." data-kh="បំពេញ App title (ឧ. 'MyReplyer') និង Short name (ឧ. 'replyer') រួចចុច Create application។">Fill in App title (e.g. 'MyReplyer') and Short name (e.g. 'replyer'). Click Create application.</span></li>
+        <li><span data-en="Copy your numeric" data-kh="ចម្លងលេខ">Copy your numeric</span> <strong>App api_id</strong> <span data-en="and 32-character" data-kh="និងលេខសម្ងាត់ 32 ខ្ទង់">and 32-character</span> <strong>App api_hash</strong>.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Step 2 Card -->
+  <div class="guide-step">
+    <div class="guide-step-header">
+      <div class="guide-step-num">2</div>
+      <h2 class="guide-step-title" data-en="Connect Your Account" data-kh="ភ្ជាប់គណនី Telegram របស់អ្នក">Connect Your Account</h2>
+    </div>
+    <p data-en="Go to the Account tab in Replyer, enter your phone number (+855 xx xxx xxx), API ID, and API Hash, then click 'Send Login Code'." data-kh="ចូលទៅកាន់ផ្ទាំង 'គណនី' (Account) ក្នុង Replyer បញ្ចូលលេខទូរស័ព្ទ (+855 xx xxx xxx), API ID, និង API Hash រួចចុច 'ផ្ញើលេខកូដចូល'។">Go to the Account tab in Replyer, enter your phone number (+855 xx xxx xxx), API ID, and API Hash, then click 'Send Login Code'.</p>
+    <div class="guide-subbox">
+      <strong data-en="Verification Step:" data-kh="ជំហានផ្ទៀងផ្ទាត់:">Verification Step:</strong>
+      <ul>
+        <li data-en="Open your official Telegram app to read the 5-digit verification code sent directly by Telegram service notifications." data-kh="បើកកម្មវិធី Telegram ផ្លូវការរបស់អ្នកដើម្បីមើលលេខកូដ 5 ខ្ទង់ដែលផ្ញើដោយផ្ទាល់ពី Telegram។">Open your official Telegram app to read the 5-digit verification code sent directly by Telegram service notifications.</li>
+        <li data-en="Enter the code in Replyer. If you have Two-Step Verification (2FA password) enabled on Telegram, enter your cloud password as well." data-kh="បញ្ចូលលេខកូដក្នុង Replyer។ ប្រសិនបើអ្នកបានបើក 2FA (ពាក្យសម្ងាត់ពពក) សូមបញ្ចូលពាក្យសម្ងាត់នោះផងដែរ។">Enter the code in Replyer. If you have Two-Step Verification (2FA password) enabled on Telegram, enter your cloud password as well.</li>
+        <li data-en="Click 'Verify &amp; Connect'. Your session will be securely encrypted and ready!" data-kh="ចុច 'ផ្ទៀងផ្ទាត់ &amp; ភ្ជាប់'។ សម័យកាលរបស់អ្នកនឹងត្រូវបានអ៊ិនគ្រីបយ៉ាងមានសុវត្ថិភាព!">&#39;Verify &amp; Connect&#39;. Your session will be securely encrypted and ready!</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Step 3 Card -->
+  <div class="guide-step">
+    <div class="guide-step-header">
+      <div class="guide-step-num">3</div>
+      <h2 class="guide-step-title" data-en="Creating Auto-Reply Rules" data-kh="ការបង្កើតច្បាប់ឆ្លើយស្វ័យប្រវត្តិ">Creating Auto-Reply Rules</h2>
+    </div>
+    <p data-en="Auto-Reply lets you target all chats globally, or specific private DMs, groups, and channels." data-kh="ផ្ទាំង Auto-Reply អនុញ្ញាតឱ្យអ្នកកំណត់លើ Chat ទាំងអស់ជាសកល ឬជ្រើសរើស DM ផ្ទាល់ខ្លួន ក្រុម ឬប៉ុស្តិ៍ជាក់លាក់។">Auto-Reply lets you target all chats globally, or specific private DMs, groups, and channels.</p>
+    <div class="guide-subbox">
+      <strong data-en="Key Features:" data-kh="មុខងារសំខាន់ៗ:">Key Features:</strong>
+      <ul>
+        <li><strong><span data-en="Targeting:" data-kh="គោលដៅ:">Targeting:</span></strong> <span data-en="Use filter chips (DMs, Groups, Channels) or search by name / @username. Selected chats will display a prominent" data-kh="ប្រើ chip ចម្រាញ់ (DMs, ក្រុម, ប៉ុស្តិ៍) ឬស្វែងរកតាមឈ្មោះ / @username។ Chat ដែលបានជ្រើសនឹងបង្ហាញផ្លាក">Use filter chips (DMs, Groups, Channels) or search by name / @username. Selected chats will display a prominent</span> <span class="badge checked-badge">✓ CHECKED</span>.</li>
+        <li><strong><span data-en="Trigger Conditions:" data-kh="លក្ខខណ្ឌផ្ញើសារ:">Trigger Conditions:</span></strong> <span data-en="Choose between 'All incoming messages', 'Specific sender(s)', or 'Message contains keyword(s)'. Keyword matching supports 'Any keyword (OR)' and 'All keywords (AND)' modes." data-kh="ជ្រើសរើសរវាង 'សារចូលទាំងអស់', 'អ្នកផ្ញើជាក់លាក់', ឬ 'សារមានពាក្យគន្លឹះ'។ ពាក្យគន្លឹះគាំទ្រទាំង OR (ពាក្យណាមួយ) និង AND (គ្រប់ពាក្យ)។">Choose between 'All incoming messages', 'Specific sender(s)', or 'Message contains keyword(s)'. Keyword matching supports 'Any keyword (OR)' and 'All keywords (AND)' modes.</span></li>
+        <li><strong><span data-en="Rotating Replies:" data-kh="ការបង្វិលសារចៃដន្យ:">Rotating Replies:</span></strong> <span data-en="Separate multiple reply variations with the pipe '|' character (e.g. 'Hello! | Thanks for reaching out | Will reply soon'). Replyer will randomly rotate them so replies look completely natural!" data-kh="បំបែកសារឆ្លើយផ្សេងៗគ្នាដោយសញ្ញា '|' (ឧ. 'សួស្តី! | អរគុណសម្រាប់ការទាក់ទង | នឹងឆ្លើយក្នុងពេលឆាប់ៗ')។ Replyer នឹងបង្វិលសារដោយចៃដន្យដើម្បីឱ្យការឆ្លើយតបមើលទៅដូចមនុស្សធម្មជាតិ!">Separate multiple reply variations with the pipe '|' character. Replyer will randomly rotate them so replies look completely natural!</span></li>
+        <li><strong><span data-en="Delays &amp; Cooldowns:" data-kh="ការពន្យារ &amp; Cooldown:">Delays &amp; Cooldowns:</span></strong> <span data-en="Set delay to 0 for instant realtime dispatch, or add a few seconds delay for human-like timing." data-kh="កំណត់ Delay ត្រឹម 0 សម្រាប់ការឆ្លើយតបភ្លាមៗក្នុងពេលជាក់ស្តែង (Realtime) ឬកំណត់ពីរបីវិនាទីដើម្បីឱ្យដូចមនុស្សពិតប្រាកដ។">Set delay to 0 for instant realtime dispatch, or add a few seconds delay for human-like timing.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Step 4 Card -->
+  <div class="guide-step">
+    <div class="guide-step-header">
+      <div class="guide-step-num">4</div>
+      <h2 class="guide-step-title" data-en="Section 04 — Realtime DM Away Reply" data-kh="ផ្នែក 04 — ឆ្លើយ Away គណនីផ្ទាល់ Realtime">Section 04 — Realtime DM Away Reply</h2>
+    </div>
+    <p data-en="Section 04 provides a dedicated away message that ONLY answers when someone sends a private 1-on-1 direct message to your personal account." data-kh="ផ្នែក 04 ផ្តល់នូវសារឆ្លើយ Away ពិសេសដែលដំណើរការតែនៅពេលមាននរណាម្នាក់ផ្ញើសារឯកជន 1-ទល់-1 មកកាន់គណនីផ្ទាល់ខ្លួនរបស់អ្នកប៉ុណ្ណោះ។">Section 04 provides a dedicated away message that ONLY answers when someone sends a private 1-on-1 direct message to your personal account.</p>
+    <div class="guide-subbox">
+      <strong data-en="Strict Protection Rules:" data-kh="ច្បាប់ការពារយ៉ាងតឹងរ៉ឹង:">Strict Protection Rules:</strong>
+      <ul>
+        <li><span data-en="Groups, supergroups, and broadcast channels are NEVER replied to by Section 04." data-kh="ក្រុម, supergroups, និងប៉ុស្តិ៍ នឹងមិនត្រូវបានឆ្លើយតបដោយផ្នែក 04 ឡើយ។">Groups, supergroups, and broadcast channels are NEVER replied to by Section 04.</span></li>
+        <li><span data-en="Telegram official service accounts and Telegram bots are completely ignored." data-kh="គណនីសេវាកម្មផ្លូវការរបស់ Telegram និង bots នឹងត្រូវបានរំលងចោលទាំងស្រុង។">Telegram official service accounts and Telegram bots are completely ignored.</span></li>
+        <li><span data-en="Set delay to 0 for instantaneous realtime replies while you are away from your phone." data-kh="កំណត់ Delay ត្រឹម 0 សម្រាប់ការឆ្លើយតបភ្លាមៗក្នុងពេលជាក់ស្តែងនៅពេលអ្នករវល់ ឬមិននៅក្បែរទូរស័ព្ទ។">Set delay to 0 for instantaneous realtime replies while you are away from your phone.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Step 5 Security Card -->
+  <div class="guide-step" style="border-left: 4px solid var(--accent);">
+    <div class="guide-step-header">
+      <div class="guide-step-num">🛡️</div>
+      <h2 class="guide-step-title" data-en="Security &amp; Data Protection" data-kh="សុវត្ថិភាព &amp; ការការពារទិន្នន័យ">Security &amp; Data Protection</h2>
+    </div>
+    <p data-en="Replyer is built with military-grade privacy and zero data leakage:" data-kh="Replyer ត្រូវបានបង្កើតឡើងជាមួយនឹងស្តង់ដារសុវត្ថិភាពខ្ពស់ និងគ្មានការបែកធ្លាយទិន្នន័យឡើយ:">Replyer is built with military-grade privacy and zero data leakage:</p>
+    <div class="guide-subbox">
+      <ul>
+        <li><strong><span data-en="Bearer Token Authentication:" data-kh="ការផ្ទៀងផ្ទាត់ Bearer Token:">Bearer Token Authentication:</span></strong> <span data-en="All API requests require an encrypted, tamper-proof Bearer token. No user or hacker can view or modify another user's chats or rules (prevents IDOR attacks)." data-kh="រាល់ការហៅ API ទាំងអស់ទាមទារ token ដែលបានអ៊ិនគ្រីប។ គ្មាននរណាម្នាក់អាចចូលមើល ឬកែប្រែ chat ឬច្បាប់របស់អ្នកដទៃបានឡើយ។">All API requests require an encrypted, tamper-proof Bearer token. No user or hacker can view or modify another user's chats or rules.</span></li>
+        <li><strong><span data-en="AES-128 Session Encryption:" data-kh="ការអ៊ិនគ្រីបសម័យកាល AES-128:">AES-128 Session Encryption:</span></strong> <span data-en="Telegram sessions and API hashes are encrypted with Fernet AES-128-CBC before touching the database." data-kh="ទិន្នន័យសម័យកាល Telegram ត្រូវបានអ៊ិនគ្រីបដោយ Fernet AES-128-CBC មុនពេលរក្សាទុកក្នុង Database។">Telegram sessions and API hashes are encrypted with Fernet AES-128-CBC before touching the database.</span></li>
+        <li><strong><span data-en="Strict Admin Verification:" data-kh="ការផ្ទៀងផ្ទាត់ Admin យ៉ាងតឹងរ៉ឹង:">Strict Admin Verification:</span></strong> <span data-en="The admin dashboard is cryptographically locked strictly to the registered ADMIN_PHONE." data-kh="ផ្ទាំងគ្រប់គ្រង Admin ត្រូវបានចាក់សោរយ៉ាងតឹងរ៉ឹងសម្រាប់តែលេខទូរស័ព្ទ ADMIN_PHONE ប៉ុណ្ណោះ។">The admin dashboard is cryptographically locked strictly to the registered ADMIN_PHONE.</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PROFILE / LOGIN SCREEN ================= -->
+<div class="screen" id="screen-login">
+  <div id="authSectionLoggedOut">
+    <section class="block" style="max-width:480px; margin:20px auto;">
+      <div class="section-header">
+        <h2 class="section-title" data-en="CONNECT TELEGRAM ACCOUNT" data-kh="ភ្ជាប់គណនី TELEGRAM">CONNECT TELEGRAM ACCOUNT</h2>
+      </div>
+      <p class="desc" data-en="Connect your personal Telegram account to start automating replies." data-kh="ភ្ជាប់គណនី Telegram ផ្ទាល់ខ្លួនរបស់អ្នកដើម្បីចាប់ផ្តើមឆ្លើយតបស្វ័យប្រវត្តិ។">Connect your personal Telegram account to start automating replies.</p>
+
+      <div class="field">
+        <label data-en="Phone Number" data-kh="លេខទូរស័ព្ទ">Phone Number</label>
+        <input id="loginPhone" type="tel" placeholder="+855 xx xxx xxx">
+      </div>
+      <div class="field">
+        <label>API ID (<span data-en="from my.telegram.org" data-kh="ពី my.telegram.org">from my.telegram.org</span>)</label>
+        <input id="loginApiId" type="text" placeholder="e.g. 12345678">
+      </div>
+      <div class="field">
+        <label>API Hash</label>
+        <input id="loginApiHash" type="text" placeholder="e.g. 0123456789abcdef0123456789abcdef">
+      </div>
+      <button class="action" onclick="startLogin()" data-en="Send Login Code" data-kh="ផ្ញើលេខកូដចូល">Send Login Code</button>
+
+      <div id="verifyStep" style="display:none; margin-top:20px; border-top:1px solid var(--border); padding-top:16px;">
+        <div class="field">
+          <label data-en="Telegram Verification Code" data-kh="លេខកូដផ្ទៀងផ្ទាត់ Telegram">Telegram Verification Code</label>
+          <input id="loginCode" type="text" placeholder="12345">
+        </div>
+        <div class="field">
+          <label data-en="2FA Password (if enabled)" data-kh="ពាក្យសម្ងាត់ 2FA (បើមាន)">2FA Password (if enabled)</label>
+          <input id="loginPassword" type="password" placeholder="••••••••">
+        </div>
+        <button class="action" onclick="verifyLogin()" data-en="Verify &amp; Connect" data-kh="ផ្ទៀងផ្ទាត់ &amp; ភ្ជាប់">Verify &amp; Connect</button>
+      </div>
+      <div id="loginMsg" style="margin-top:12px; font-size:13px;"></div>
+    </section>
+  </div>
+
+  <div id="authSectionLoggedIn" style="display:none;">
+    <section class="block" style="max-width:560px; margin:20px auto;">
+      <div class="section-header">
+        <h2 class="section-title" data-en="CONNECTED ACCOUNT" data-kh="គណនីដែលបានភ្ជាប់">CONNECTED ACCOUNT</h2>
+      </div>
+      <div style="display:flex; align-items:center; gap:14px; margin-bottom:20px;">
+        <div class="brand-logo-wrap" style="width:52px; height:52px; border-radius:14px; font-size:22px; font-weight:800; color:#fff;" id="userAvatar">U</div>
+        <div>
+          <h3 id="userName" style="margin:0 0 4px; font-size:17px;">—</h3>
+          <div id="userPhone" style="color:var(--text-dim); font-size:13px;">—</div>
+        </div>
+      </div>
+
+      <div class="stats-grid" style="grid-template-columns:1fr 1fr; margin-bottom:20px;">
+        <div class="stat-cell"><div class="val" id="statRules">—</div><div class="lbl" data-en="ACTIVE RULES" data-kh="ច្បាប់សកម្ម">ACTIVE RULES</div></div>
+        <div class="stat-cell"><div class="val" id="statAway">—</div><div class="lbl" data-en="AWAY REPLY" data-kh="AWAY REPLY">AWAY REPLY</div></div>
+      </div>
+
+      <button class="danger" style="width:100%;" onclick="logout()" data-en="Log Out" data-kh="ចាកចេញ">Log Out</button>
+    </section>
+  </div>
+</div>
+
+<!-- ================= ADMIN SCREEN ================= -->
+<div class="screen" id="screen-admin">
+  <section class="block">
+    <div class="section-header" style="justify-content:space-between; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="section-label">ADMIN PANEL</span>
+        <h2 class="section-title" data-en="USER TRACKING &amp; APPROVAL" data-kh="តាមដាន &amp; អនុម័តអ្នកប្រើប្រាស់">USER TRACKING &amp; APPROVAL</h2>
+      </div>
+      <button class="secondary" style="font-size:12px; padding:4px 12px;" onclick="loadAdminUsers()" data-en="Refresh" data-kh="ផ្ទុកឡើងវិញ">Refresh</button>
+    </div>
+    <p class="desc" data-en="Monitor all registered users, track their reply activities, and approve/block user access." data-kh="តាមដានអ្នកប្រើប្រាស់ដែលបានចុះឈ្មោះទាំងអស់ មើលសកម្មភាពឆ្លើយតប និងអនុម័ត/ផ្អាកគណនី។">Monitor all registered users, track their reply activities, and approve/block user access.</p>
+
+    <!-- Admin Top Stats -->
+    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
+      <div class="stat-cell"><div class="val" id="adminTotalUsers">0</div><div class="lbl" data-en="TOTAL USERS" data-kh="អ្នកប្រើប្រាស់សរុប">TOTAL USERS</div></div>
+      <div class="stat-cell"><div class="val" id="adminActiveRules">0</div><div class="lbl" data-en="TOTAL ACTIVE RULES" data-kh="ច្បាប់សកម្មសរុប">TOTAL ACTIVE RULES</div></div>
+      <div class="stat-cell"><div class="val" id="adminTotalReplies">0</div><div class="lbl" data-en="TOTAL REPLIES SENT" data-kh="ការឆ្លើយតបសរុប">TOTAL REPLIES SENT</div></div>
+    </div>
+
+    <!-- Users Table -->
+    <div style="overflow-x:auto;">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th data-en="User" data-kh="អ្នកប្រើប្រាស់">User</th>
+            <th data-en="Phone" data-kh="ទូរស័ព្ទ">Phone</th>
+            <th data-en="Connected" data-kh="កាលបរិច្ឆេទ">Connected</th>
+            <th data-en="Active Rules" data-kh="ច្បាប់សកម្ម">Active Rules</th>
+            <th data-en="Replies" data-kh="ការឆ្លើយ">Replies</th>
+            <th data-en="Status" data-kh="ស្ថានភាព">Status</th>
+            <th data-en="Action" data-kh="សកម្មភាព">Action</th>
+          </tr>
+        </thead>
+        <tbody id="adminTableBody">
+          <tr><td colspan="7" style="text-align:center; color:var(--text-dim);" data-en="Loading users…" data-kh="កំពុងផ្ទុកអ្នកប្រើប្រាស់…">Loading users…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- ================= EDIT RULE MODAL ================= -->
+<div class="modal-overlay" id="editRuleModal">
+  <div class="modal-box">
+    <div class="modal-title" data-en="EDIT RULE" data-kh="កែសម្រួលច្បាប់">EDIT RULE</div>
+    <input type="hidden" id="editRuleId">
+
+    <div class="field">
+      <label data-en="When to reply" data-kh="ពេលណាត្រូវឆ្លើយ">When to reply</label>
+      <select id="editTriggerType" onchange="onEditTriggerChange()">
+        <option value="all" data-en="All incoming messages" data-kh="សារចូលទាំងអស់">All incoming messages</option>
+        <option value="sender" data-en="From specific sender(s)" data-kh="ពីអ្នកផ្ញើជាក់លាក់">From specific sender(s)</option>
+        <option value="keyword" data-en="Message contains keyword(s)" data-kh="សារមានពាក្យគន្លឹះជាក់លាក់">Message contains keyword(s)</option>
+      </select>
+    </div>
+
+    <div class="field" id="editTriggerValueField">
+      <label data-en="Trigger value (Sender ID or keywords)" data-kh="តម្លៃលក្ខខណ្ឌ (ID អ្នកផ្ញើ ឬពាក្យគន្លឹះ)">Trigger value (Sender ID or keywords)</label>
+      <input type="text" id="editTriggerValue">
+    </div>
+
+    <div class="field">
+      <label data-en="Reply message" data-kh="អត្ថបទឆ្លើយ">Reply message</label>
+      <textarea id="editReplyText" rows="3"></textarea>
+    </div>
+
+    <div class="field">
+      <label data-en="Reaction Emoji" data-kh="Emoji ប្រតិកម្ម">Reaction Emoji</label>
+      <input type="text" id="editReactionEmoji" placeholder="e.g. 👍 or ❤️">
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      <div class="field">
+        <label data-en="Delay (seconds)" data-kh="ពន្យារពេល (វិនាទី)">Delay (seconds)</label>
+        <input type="number" id="editDelay" min="0">
+      </div>
+      <div class="field">
+        <label data-en="Cooldown (seconds)" data-kh="Cooldown (វិនាទី)">Cooldown (seconds)</label>
+        <input type="number" id="editCooldown" min="0">
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <button class="action" onclick="saveEditedRule()" data-en="Save Changes" data-kh="រក្សាទុកការកែប្រែ">Save Changes</button>
+      <button class="secondary" onclick="closeEditModal()" data-en="Cancel" data-kh="បោះបង់">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= OVERLAY TELEGRAM CHAT WIDGET ================= -->
+<div class="floating-tg-chat" onclick="toggleTelegramSupport()">
+  <div class="floating-tg-tooltip" data-en="💬 Chat with Admin" data-kh="💬 ជជែកជាមួយ Admin">💬 Chat with Admin</div>
+  <button class="floating-tg-btn" title="Contact Admin on Telegram">
+    <svg viewBox="0 0 240 240">
+      <path d="M54 116l118-47c5-2 11 2 9 8l-20 95c-1 6-8 9-13 5l-33-25-16 16c-3 3-8 2-9-3l-7-34-31-10c-5-2-5-9 2-11zm44 23l54-34-43 39 4 23 10-10 26 20 15-72-90 36 24 8z"/>
+    </svg>
+  </button>
+</div>
+
+<!-- Support Card Modal -->
+<div class="tg-support-modal" id="tgSupportModal">
+  <div class="tg-support-header">
+    <div class="tg-support-title">
+      <span class="dot connected"></span>
+      <span data-en="Admin Support" data-kh="ផ្នែកគាំទ្រ Admin">Admin Support</span>
+    </div>
+    <button class="secondary" style="padding:2px 8px; font-size:11px;" onclick="toggleTelegramSupport()">✕</button>
+  </div>
+  <p style="font-size:12.5px; color:var(--text-dim); margin:0 0 14px; line-height:1.45;" data-en="Have questions, need help setting up rules, or requesting an account approval? Message our admin directly on Telegram." data-kh="មានសំណួរ ត្រូវការជំនួយរៀបចំច្បាប់ ឬស្នើសុំការអនុម័តគណនី? ផ្ញើសារផ្ទាល់ទៅកាន់ admin តាម Telegram។">Have questions, need help setting up rules, or requesting an account approval? Message our admin directly on Telegram.</p>
+  <a href="https://t.me/broteach" target="_blank" rel="noopener" class="action" style="display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; padding:10px 16px; font-size:13px;" data-en="Open Telegram Chat" data-kh="បើកឆាត Telegram">
+    <svg viewBox="0 0 240 240" style="width:16px; height:16px; fill:#fff;"><path d="M54 116l118-47c5-2 11 2 9 8l-20 95c-1 6-8 9-13 5l-33-25-16 16c-3 3-8 2-9-3l-7-34-31-10c-5-2-5-9 2-11zm44 23l54-34-43 39 4 23 10-10 26 20 15-72-90 36 24 8z"/></svg>
+    <span data-en="Open Telegram Chat" data-kh="បើកឆាត Telegram">Open Telegram Chat</span>
+  </a>
+</div>
+
+<!-- ================= MODERN FOOTER ================= -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-left">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <svg viewBox="0 0 240 240"><path d="M54 116l118-47c5-2 11 2 9 8l-20 95c-1 6-8 9-13 5l-33-25-16 16c-3 3-8 2-9-3l-7-34-31-10c-5-2-5-9 2-11zm44 23l54-34-43 39 4 23 10-10 26 20 15-72-90 36 24 8z"/></svg>
+        </div>
+        <span>REPLYER</span>
+      </div>
+      <p class="footer-desc" data-en="Intelligent automated responses directly from your personal Telegram account. Fast, secure, and private." data-kh="ការឆ្លើយតបស្វ័យប្រវត្តិឆ្លាតវៃ ពីគណនី Telegram ផ្ទាល់ខ្លួនរបស់អ្នក។ រហ័ស សុវត្ថិភាព និងឯកជនភាពខ្ពស់។">Intelligent automated responses directly from your personal Telegram account. Fast, secure, and private.</p>
+    </div>
+    <div class="footer-right">
+      <div class="footer-copy">
+        <span data-en="Developed &amp; Powered by" data-kh="អភិវឌ្ឍន៍ &amp; ឧបត្ថម្ភដោយ">Developed &amp; Powered by</span>
+        <a href="https://broteach.com" target="_blank" rel="noopener" class="footer-brand-link">broteach.com</a>
+      </div>
+      <div class="footer-copy">
+        © 2026 <a href="https://broteach.com" target="_blank" rel="noopener" class="footer-brand-link">broteach.com</a>. All rights reserved.
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ================= BOTTOM NAV (MOBILE) ================= -->
+<div class="bottomnav">
+  <button data-screen="home" class="active" onclick="goTo('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+    <span data-en="Home" data-kh="ទំព័រដើម">Home</span>
+  </button>
+  <button data-screen="auto" onclick="goTo('auto')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
+    <span data-en="Auto" data-kh="ស្វ័យប្រវត្តិ">Auto</span>
+  </button>
+  <button data-screen="guide" onclick="goTo('guide')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+    <span data-en="Guide" data-kh="មគ្គុទ្ទេសក៍">Guide</span>
+  </button>
+  <button data-screen="admin" id="adminNavBottom" style="display:none;" onclick="goTo('admin')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+    <span data-en="Admin" data-kh="គ្រប់គ្រង">Admin</span>
+  </button>
+  <button data-screen="login" id="authNavBottom" onclick="goTo('login')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+    <span data-en="Account" data-kh="គណនី">Account</span>
+  </button>
+</div>
+
+<script>
+  const API_BASE = "";
+  let userId = null;
+  let isAdmin = false;
+  let authToken = localStorage.getItem('replyer-token') || null;
+  let chats = [];
+  let selectedChatIds = new Set();
+  let isGlobalSelected = false;
+  let chatFilter = 'all';
+  let currentLang = localStorage.getItem('replyer-lang') || 'en';
+
+  // Crisp Vector SVG Flags
+  const FLAG_US = `<svg class="flag-icon" viewBox="0 0 640 480"><path fill="#bd3d44" d="M0 0h640v480H0"/><path stroke="#fff" stroke-width="37" d="M0 55.5h640M0 129.5h640M0 203.5h640M0 277.5h640M0 351.5h640M0 425.5h640"/><path fill="#192f5d" d="M0 0h256v259H0z"/><polygon points="128,60 134,78 152,78 137,89 143,107 128,96 113,107 119,89 104,78 122,78" fill="#fff"/></svg>`;
+  const FLAG_KH = `<svg class="flag-icon" viewBox="0 0 640 480"><path fill="#032ea6" d="M0 0h640v480H0z"/><path fill="#e00025" d="M0 120h640v240H0z"/><path fill="#fff" d="M320 180l24 48h-48zm-40 24l16 24h-32zm80 0l16 24h-32zm-70 24h120v40H290zm-10 10h140v20H280zm-20 10h180v10H260z"/></svg>`;
+
+  document.getElementById('flagUS').innerHTML = FLAG_US;
+  document.getElementById('flagKH').innerHTML = FLAG_KH;
+
+  // ---------- Authenticated API Fetch Wrapper ----------
+  async function apiFetch(url, options = {}) {
+    options.headers = options.headers || {};
+    if (authToken) {
+      options.headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    const res = await fetch(url, options);
+    if (res.status === 401) {
+      // Session expired or token invalid
+      setLoggedOut();
+      goTo('login');
+      alert(currentLang === 'kh' ? 'សម័យកាលរបស់អ្នកបានផុតកំណត់។ សូមចូលម្តងទៀត។' : 'Your session has expired. Please log in again.');
+      throw new Error("Unauthorized");
+    }
+    return res;
+  }
+
+  // ---------- Language System ----------
+  function applyLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('replyer-lang', lang);
+
+    document.getElementById('langOptEN').classList.toggle('active', lang === 'en');
+    document.getElementById('langOptKH').classList.toggle('active', lang === 'kh');
+
+    document.querySelectorAll('[data-en]').forEach(el => {
+      const val = el.getAttribute('data-' + lang) || el.getAttribute('data-en');
+      if (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA') {
+        el.textContent = val;
+      }
+    });
+
+    document.querySelectorAll('[data-' + lang + '-placeholder]').forEach(el => {
+      el.placeholder = el.getAttribute('data-' + lang + '-placeholder') || el.placeholder;
+    });
+
+    document.querySelectorAll('select option[data-en]').forEach(opt => {
+      opt.textContent = opt.getAttribute('data-' + lang) || opt.getAttribute('data-en');
+    });
+
+    renderChatList(getFilteredChats());
+  }
+
+  // ---------- Theme System ----------
+  function toggleTheme() {
+    const cur = document.body.getAttribute('data-theme');
+    const next = cur === 'light' ? 'dark' : 'light';
+    document.body.setAttribute('data-theme', next);
+    localStorage.setItem('replyer-theme', next);
+    document.getElementById('themeToggle').textContent = next === 'dark' ? '🌙' : '☀️';
+  }
+  (function initTheme() {
+    const saved = localStorage.getItem('replyer-theme') || 'dark';
+    document.body.setAttribute('data-theme', saved);
+    document.getElementById('themeToggle').textContent = saved === 'dark' ? '🌙' : '☀️';
+  })();
+
+  // ---------- Navigation ----------
+  function goTo(screen) {
+    localStorage.setItem('replyer-screen', screen);
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.topnav button').forEach(b => b.classList.toggle('active', b.dataset.screen === screen));
+    document.querySelectorAll('.bottomnav button').forEach(b => b.classList.toggle('active', b.dataset.screen === screen));
+    const target = document.getElementById('screen-' + screen);
+    if (target) target.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Mobile layout zoom lock
+  document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+  document.addEventListener('touchmove', function(e) {
+    if (e.scale && e.scale !== 1) e.preventDefault();
+  }, { passive: false });
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function toggleTelegramSupport() {
+    const modal = document.getElementById('tgSupportModal');
+    modal.classList.toggle('active');
+  }
+
+  // ---------- Auth & User Session ----------
+  async function checkAuth() {
+    const saved = localStorage.getItem('replyer-user');
+    authToken = localStorage.getItem('replyer-token') || null;
+    if (!saved || !authToken) { setLoggedOut(); return; }
+    try {
+      const u = JSON.parse(saved);
+      userId = u.user_id || u.id;
+      if (!userId) { setLoggedOut(); return; }
+      isAdmin = !!u.is_admin;
+      setLoggedIn(u);
+
+      const lastScreen = localStorage.getItem('replyer-screen') || 'auto';
+      goTo(lastScreen);
+
+      await loadChats();
+      loadRules();
+      loadDefaultRule();
+      loadLogs();
+      loadStats();
+      if (isAdmin) {
+        document.getElementById('adminNavTop').style.display = '';
+        document.getElementById('adminNavBottom').style.display = '';
+        loadAdminUsers();
+      }
+    } catch(e) {
+      console.error("Auth check failed:", e);
+      setLoggedOut();
+    }
+  }
+
+  function setLoggedIn(u) {
+    document.getElementById('authSectionLoggedOut').style.display = 'none';
+    document.getElementById('authSectionLoggedIn').style.display = 'block';
+    document.getElementById('userName').textContent = u.display_name || 'Telegram User';
+    document.getElementById('userPhone').textContent = u.phone || '';
+    document.getElementById('userAvatar').textContent = (u.display_name || 'U').charAt(0).toUpperCase();
+    document.getElementById('status').innerHTML = `<span class="dot connected"></span><span>${currentLang === 'kh' ? 'បានភ្ជាប់ (សុវត្ថិភាព)' : 'Connected (Secure)'} (${escapeHtml(u.display_name)})</span>`;
+    
+    const pill = document.getElementById('topbarUserPill');
+    if (pill) {
+      pill.style.display = 'inline-flex';
+      document.getElementById('topbarUserName').textContent = u.display_name || 'Online';
+    }
+  }
+
+  function setLoggedOut() {
+    userId = null;
+    authToken = null;
+    localStorage.removeItem('replyer-token');
+    document.getElementById('authSectionLoggedOut').style.display = 'block';
+    document.getElementById('authSectionLoggedIn').style.display = 'none';
+    document.getElementById('status').innerHTML = `<span class="dot"></span><span>${currentLang === 'kh' ? 'មិនបានភ្ជាប់' : 'Not connected'}</span>`;
+    const pill = document.getElementById('topbarUserPill');
+    if (pill) pill.style.display = 'none';
+  }
+
+  async function startLogin() {
+    const phone = document.getElementById('loginPhone').value.trim();
+    const apiId = document.getElementById('loginApiId').value.trim();
+    const apiHash = document.getElementById('loginApiHash').value.trim();
+    const msg = document.getElementById('loginMsg');
+    if (!phone || !apiId || !apiHash) {
+      msg.innerHTML = `<span style="color:var(--danger);">${currentLang === 'kh' ? 'សូមបំពេញព័ត៌មានទាំងអស់' : 'Please fill all fields'}</span>`;
+      return;
+    }
+    msg.innerHTML = `<span style="color:var(--accent);">${currentLang === 'kh' ? 'កំពុងផ្ញើលេខកូដ…' : 'Sending code…'}</span>`;
+    try {
+      const res = await fetch(`${API_BASE}/auth/login/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, api_id: parseInt(apiId), api_hash: apiHash }),
+      });
+      const data = await res.json();
+      if (data.status === 'code_sent') {
+        document.getElementById('verifyStep').style.display = 'block';
+        msg.innerHTML = `<span style="color:var(--success);">${currentLang === 'kh' ? 'លេខកូដត្រូវបានផ្ញើទៅកាន់ Telegram របស់អ្នក' : 'Code sent to your Telegram app'}</span>`;
+      } else {
+        msg.innerHTML = `<span style="color:var(--danger);">${escapeHtml(data.detail || 'Failed')}</span>`;
+      }
+    } catch(e) { msg.innerHTML = `<span style="color:var(--danger);">${e.message}</span>`; }
+  }
+
+  async function verifyLogin() {
+    const phone = document.getElementById('loginPhone').value.trim();
+    const code = document.getElementById('loginCode').value.trim();
+    const password = document.getElementById('loginPassword').value.trim() || null;
+    const msg = document.getElementById('loginMsg');
+    msg.innerHTML = `<span style="color:var(--accent);">${currentLang === 'kh' ? 'កំពុងផ្ទៀងផ្ទាត់…' : 'Verifying…'}</span>`;
+    try {
+      const res = await fetch(`${API_BASE}/auth/login/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, code, password }),
+      });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        authToken = data.token || data.access_token;
+        if (authToken) {
+          localStorage.setItem('replyer-token', authToken);
+        }
+        const userObj = {
+          id: data.user_id,
+          user_id: data.user_id,
+          display_name: data.display_name,
+          phone: phone,
+          is_admin: data.is_admin
+        };
+        localStorage.setItem('replyer-user', JSON.stringify(userObj));
+        userId = data.user_id;
+        isAdmin = data.is_admin;
+        setLoggedIn(userObj);
+        goTo('auto');
+        await loadChats();
+        loadRules();
+        loadDefaultRule();
+        loadStats();
+      } else {
+        msg.innerHTML = `<span style="color:var(--danger);">${escapeHtml(data.detail || 'Verification failed')}</span>`;
+      }
+    } catch(e) { msg.innerHTML = `<span style="color:var(--danger);">${e.message}</span>`; }
+  }
+
+  function logout() {
+    localStorage.removeItem('replyer-user');
+    localStorage.removeItem('replyer-token');
+    setLoggedOut();
+    goTo('home');
+  }
+
+  // ---------- Chats Loading & Selection ----------
+  async function loadChats() {
+    if (!userId) return;
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/chats`);
+      if (res.ok) {
+        chats = await res.json();
+        renderChatList(getFilteredChats());
+        updateSimChatOptions();
+      }
+    } catch(e) { console.error("Error loading chats:", e); }
+  }
+
+  function getFilteredChats() {
+    const q = (document.getElementById('chatSearch').value || '').trim().toLowerCase();
+    return chats.filter(c => {
+      if (chatFilter === 'group' && !c.is_group) return false;
+      if (chatFilter === 'dm' && !c.is_user) return false;
+      if (chatFilter === 'channel' && !c.is_channel) return false;
+      if (q) {
+        const nameMatch = c.name && c.name.toLowerCase().includes(q);
+        const userMatch = c.username && c.username.toLowerCase().includes(q);
+        const idMatch = String(c.chat_id).includes(q);
+        if (!nameMatch && !userMatch && !idMatch) return false;
+      }
+      return true;
+    });
+  }
+
+  function setChatFilter(type, btn) {
+    chatFilter = type;
+    document.querySelectorAll('.filter-chips .chip').forEach(c => c.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderChatList(getFilteredChats());
+  }
+
+  function filterChats() {
+    renderChatList(getFilteredChats());
+  }
+
+  function renderChatList(list) {
+    const el = document.getElementById('chatList');
+    el.innerHTML = '';
+    if (!list.length) {
+      el.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-dim);">${currentLang === 'kh' ? 'រកមិនឃើញ chat ដែលត្រូវគ្នាទេ' : 'No chats match.'}</div>`;
+      return;
+    }
+    list.forEach(c => {
+      const isSelected = selectedChatIds.has(c.chat_id);
+      const row = document.createElement('div');
+      row.className = 'chat-row' + (isSelected ? ' selected' : '');
+      const typeBadge = c.is_group ? `<span class="badge group">👥 Group</span>` :
+                        c.is_channel ? `<span class="badge channel">📢 Channel</span>` :
+                        `<span class="badge dm">👤 DM</span>`;
+      const checkedBadge = isSelected ? `<span class="badge checked-badge">✓ ${currentLang === 'kh' ? 'បានជ្រើស' : 'CHECKED'}</span>` : '';
+      const usernameSpan = c.username ? `<span class="chat-username">@${escapeHtml(c.username)}</span>` : '';
+      
+      row.innerHTML = `
+        <div class="chat-row-left">
+          <input type="checkbox" class="chat-checkbox" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleChatSelection(${c.chat_id});">
+          <span class="chat-name">${escapeHtml(c.name || 'Chat ' + c.chat_id)}</span>
+          ${usernameSpan}
+        </div>
+        <div class="chat-row-right">
+          ${checkedBadge}
+          ${typeBadge}
+        </div>
+      `;
+      row.onclick = () => toggleChatSelection(c.chat_id);
+      el.appendChild(row);
+    });
+    updateSelectedCountUI();
+  }
+
+  function toggleChatSelection(chatId) {
+    if (isGlobalSelected) {
+      isGlobalSelected = false;
+      document.getElementById('globalChatCard').classList.remove('selected');
+      document.getElementById('globalBadge').textContent = currentLang === 'kh' ? 'ជ្រើស' : 'Select';
+      document.getElementById('globalBadge').className = 'badge muted';
+    }
+    if (selectedChatIds.has(chatId)) {
+      selectedChatIds.delete(chatId);
+    } else {
+      selectedChatIds.add(chatId);
+    }
+    renderChatList(getFilteredChats());
+    updateTargetSummary();
+    if (selectedChatIds.size === 1) {
+      const firstChat = chats.find(c => c.chat_id === Array.from(selectedChatIds)[0]);
+      if (firstChat && firstChat.is_group) loadMembers(firstChat.chat_id);
+    }
+  }
+
+  function toggleGlobalSelection() {
+    isGlobalSelected = !isGlobalSelected;
+    const card = document.getElementById('globalChatCard');
+    const badge = document.getElementById('globalBadge');
+    if (isGlobalSelected) {
+      selectedChatIds.clear();
+      card.classList.add('selected');
+      badge.textContent = currentLang === 'kh' ? '✓ បានជ្រើស (ទូទៅ)' : '✓ CHECKED (GLOBAL)';
+      badge.className = 'badge checked-badge';
+    } else {
+      card.classList.remove('selected');
+      badge.textContent = currentLang === 'kh' ? 'ជ្រើស' : 'Select';
+      badge.className = 'badge muted';
+    }
+    renderChatList(getFilteredChats());
+    updateTargetSummary();
+  }
+
+  function selectAllFilteredChats() {
+    if (isGlobalSelected) toggleGlobalSelection();
+    getFilteredChats().forEach(c => selectedChatIds.add(c.chat_id));
+    renderChatList(getFilteredChats());
+    updateTargetSummary();
+  }
+
+  function clearSelectedChats() {
+    selectedChatIds.clear();
+    if (isGlobalSelected) toggleGlobalSelection();
+    renderChatList(getFilteredChats());
+    updateTargetSummary();
+  }
+
+  function updateSelectedCountUI() {
+    const badge = document.getElementById('selectedCountBadge');
+    if (isGlobalSelected) {
+      badge.textContent = currentLang === 'kh' ? '✓ Chat ទាំងអស់ (ទូទៅ)' : '✓ All Chats (Global)';
+      badge.className = 'badge checked-badge';
+    } else {
+      badge.textContent = `${selectedChatIds.size} ${currentLang === 'kh' ? 'បានជ្រើស' : 'checked'}`;
+      badge.className = selectedChatIds.size > 0 ? 'badge checked-badge' : 'badge muted';
+    }
+  }
+
+  function updateTargetSummary() {
+    const sec = document.getElementById('ruleSection');
+    const summary = document.getElementById('targetSummaryText');
+    if (isGlobalSelected) {
+      sec.style.display = 'block';
+      summary.textContent = currentLang === 'kh' ? '🌐 Chat ទាំងអស់ (ច្បាប់ទូទៅ)' : '🌐 All Chats (Global Rule)';
+    } else if (selectedChatIds.size > 0) {
+      sec.style.display = 'block';
+      if (selectedChatIds.size === 1) {
+        const c = chats.find(x => x.chat_id === Array.from(selectedChatIds)[0]);
+        summary.textContent = c ? c.name : '1 Chat Selected';
+      } else {
+        summary.textContent = `${selectedChatIds.size} ${currentLang === 'kh' ? 'Chats បានជ្រើស' : 'Chats Selected'}`;
+      }
+    } else {
+      sec.style.display = 'none';
+    }
+    updateSelectedCountUI();
+  }
+
+  function toggleQuickAdd() {
+    const box = document.getElementById('quickAddBox');
+    box.classList.toggle('active');
+  }
+
+  async function resolveAndAddChat() {
+    const input = document.getElementById('customChatInput');
+    const query = input.value.trim();
+    const msg = document.getElementById('quickAddMsg');
+    if (!query) return;
+    msg.innerHTML = `<span style="color:var(--accent);">${currentLang === 'kh' ? 'កំពុងស្វែងរក…' : 'Searching…'}</span>`;
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/chats/resolve?query=${encodeURIComponent(query)}`);
+      if (!res.ok) throw new Error('Not found');
+      const found = await res.json();
+      const existing = chats.find(c => c.chat_id === found.chat_id);
+      if (!existing) {
+        chats.unshift(found);
+      }
+      selectedChatIds.add(found.chat_id);
+      input.value = '';
+      msg.innerHTML = `<span style="color:var(--success);">✓ ${escapeHtml(found.name)} ${currentLang === 'kh' ? 'ត្រូវបានបន្ថែម & ជ្រើសរើស!' : 'added &amp; selected!'}</span>`;
+      renderChatList(getFilteredChats());
+      updateTargetSummary();
+    } catch(e) {
+      if (query.replace(/^-/, '').match(/^\d+$/)) {
+        const customId = parseInt(query);
+        const newChat = { chat_id: customId, name: `Chat ${customId}`, is_group: true, is_channel: false, is_user: false };
+        chats.unshift(newChat);
+        selectedChatIds.add(customId);
+        input.value = '';
+        msg.innerHTML = `<span style="color:var(--success);">✓ Chat ID ${customId} ${currentLang === 'kh' ? 'ត្រូវបានបន្ថែម!' : 'added!'}</span>`;
+        renderChatList(getFilteredChats());
+        updateTargetSummary();
+      } else {
+        msg.innerHTML = `<span style="color:var(--danger);">${currentLang === 'kh' ? 'រកមិនឃើញ chat ឬប៉ុស្តិ៍នេះទេ' : 'Could not find chat or channel'}</span>`;
+      }
+    }
+  }
+
+  async function loadMembers(chatId) {
+    const sel = document.getElementById('senderSelect');
+    sel.innerHTML = `<option value="">${currentLang === 'kh' ? 'កំពុងផ្ទុកសមាជិក…' : 'Loading members…'}</option>`;
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/chats/${chatId}/members`);
+      const members = await res.json();
+      sel.innerHTML = `<option value="">${currentLang === 'kh' ? '-- ជ្រើសសមាជិក --' : '-- Choose member --'}</option>`;
+      members.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = `${m.name} ${m.username ? '(@' + m.username + ')' : ''}`;
+        sel.appendChild(opt);
+      });
+    } catch(e) {
+      sel.innerHTML = `<option value="">${currentLang === 'kh' ? 'មិនអាចផ្ទុកសមាជិកបានទេ' : 'Could not load members'}</option>`;
+    }
+  }
+
+  // ---------- Triggers & Emojis ----------
+  function onTriggerChange() {
+    const t = document.getElementById('triggerType').value;
+    document.getElementById('senderField').style.display = t === 'sender' ? 'block' : 'none';
+    document.getElementById('keywordField').style.display = t === 'keyword' ? 'block' : 'none';
+  }
+
+  function selectEmoji(emoji) {
+    document.getElementById('reactionEmoji').value = emoji;
+    document.querySelectorAll('.emoji-picker .emoji-btn').forEach(btn => {
+      if (btn.classList.contains('clear-btn')) return;
+      btn.classList.toggle('selected', btn.textContent === emoji);
+    });
+  }
+
+  function selectDefaultEmoji(emoji) {
+    document.getElementById('defaultReactionEmoji').value = emoji;
+    document.querySelectorAll('#screen-auto .block:nth-of-type(4) .emoji-btn').forEach(btn => {
+      if (btn.classList.contains('clear-btn')) return;
+      btn.classList.toggle('selected', btn.textContent === emoji);
+    });
+  }
+
+  // ---------- Rule Creation & Management ----------
+  async function createRule() {
+    if (!userId) return;
+    const triggerType = document.getElementById('triggerType').value;
+    let triggerValue = null;
+    if (triggerType === 'sender') {
+      const selected = document.getElementById('senderSelect').value;
+      const custom = document.getElementById('customSenderId').value.trim();
+      triggerValue = custom || selected || null;
+      if (!triggerValue) { alert(currentLang === 'kh' ? 'សូមជ្រើស ឬបញ្ចូល ID អ្នកផ្ញើ' : 'Please choose or type a sender ID'); return; }
+    } else if (triggerType === 'keyword') {
+      triggerValue = document.getElementById('keyword').value.trim();
+      if (!triggerValue) { alert(currentLang === 'kh' ? 'សូមបញ្ចូលពាក្យគន្លឹះ' : 'Please enter keywords'); return; }
+    }
+
+    const replyText = document.getElementById('replyText').value.trim() || null;
+    const reactionEmoji = document.getElementById('reactionEmoji').value.trim() || null;
+    if (!replyText && !reactionEmoji) {
+      alert(currentLang === 'kh' ? 'សូមកំណត់សារឆ្លើយតប ឬ Emoji ប្រតិកម្ម' : 'Set a reply text, a reaction, or both.');
+      return;
+    }
+
+    const delay = parseInt(document.getElementById('delay').value) || 0;
+    const cooldown = parseInt(document.getElementById('cooldown').value) || 0;
+    const matchMode = document.getElementById('matchMode').value;
+
+    let payload = {
+      trigger_type: triggerType,
+      trigger_value: triggerValue,
+      reply_text: replyText,
+      reaction_emoji: reactionEmoji,
+      delay_seconds: delay,
+      cooldown_seconds: cooldown,
+      match_mode: matchMode
+    };
+
+    if (isGlobalSelected) {
+      payload.is_global = true;
+      payload.chat_id = 0;
+      payload.chat_name = "All Chats (Global)";
+    } else {
+      const selectedArr = Array.from(selectedChatIds);
+      if (selectedArr.length === 1) {
+        const c = chats.find(x => x.chat_id === selectedArr[0]);
+        payload.chat_id = selectedArr[0];
+        payload.chat_name = c ? c.name : `Chat ${selectedArr[0]}`;
+      } else {
+        payload.chats = selectedArr.map(id => {
+          const c = chats.find(x => x.chat_id === id);
+          return { chat_id: id, chat_name: c ? c.name : `Chat ${id}` };
+        });
+      }
+    }
+
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/rules`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        alert(currentLang === 'kh' ? 'ច្បាប់ត្រូវបានបង្កើតដោយជោគជ័យ!' : 'Rule created successfully!');
+        document.getElementById('replyText').value = '';
+        document.getElementById('keyword').value = '';
+        selectEmoji('');
+        clearSelectedChats();
+        loadRules();
+        loadStats();
+      } else {
+        const err = await res.json();
+        alert(err.detail || 'Failed to create rule');
+      }
+    } catch(e) { alert(e.message); }
+  }
+
+  async function loadRules() {
+    if (!userId) return;
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/rules`);
+      const rules = await res.json();
+      renderRules(rules);
+    } catch(e) { console.error(e); }
+  }
+
+  function renderRules(rules) {
+    const el = document.getElementById('rulesList');
+    document.getElementById('rulesCountBadge').textContent = rules.length;
+    el.innerHTML = '';
+    if (!rules.length) {
+      el.innerHTML = `<div style="padding:16px; text-align:center; color:var(--text-dim);">${currentLang === 'kh' ? 'មិនទាន់មានច្បាប់នៅឡើយទេ។' : 'No rules created yet.'}</div>`;
+      return;
+    }
+    rules.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'rule-card' + (r.active ? ' active-rule' : '');
+      const triggerBadge = r.trigger_type === 'all' ? `<span class="badge muted">⚡ All Messages</span>` :
+                           r.trigger_type === 'sender' ? `<span class="badge dm">👤 Sender: ${escapeHtml(r.trigger_value)}</span>` :
+                           `<span class="badge group">🔍 Keyword: ${escapeHtml(r.trigger_value)}</span>`;
+      const replyContent = r.reply_text ? escapeHtml(r.reply_text) : `<em style="color:var(--text-dim);">${currentLang === 'kh' ? '(ប្រតិកម្ម Emoji តែប៉ុណ្ណោះ)' : '(Reaction only)'}</em>`;
+      card.innerHTML = `
+        <div class="rule-card-header">
+          <div>
+            <div class="rule-chat">${escapeHtml(r.chat_name || (r.chat_id === 0 ? 'All Chats (Global)' : 'Chat ' + r.chat_id))}</div>
+            <div class="rule-meta">
+              ${triggerBadge}
+              ${r.reaction_emoji ? `<span class="badge muted">${r.reaction_emoji}</span>` : ''}
+              <span class="badge muted">${r.delay_seconds}s delay</span>
+              ${r.cooldown_seconds ? `<span class="badge muted">${r.cooldown_seconds}s cd</span>` : ''}
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" ${r.active ? 'checked' : ''} onchange="toggleRuleActive(${r.id}, this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="rule-body">${replyContent}</div>
+        <div class="rule-actions">
+          <button class="secondary" style="font-size:12px; padding:4px 10px;" onclick="openEditModal(${JSON.stringify(r).replace(/"/g, '&quot;')})" data-en="Edit" data-kh="កែសម្រួល">Edit</button>
+          <button class="danger" style="font-size:12px; padding:4px 10px;" onclick="deleteRule(${r.id})" data-en="Delete" data-kh="លុប">Delete</button>
+        </div>
+      `;
+      el.appendChild(card);
+    });
+  }
+
+  async function toggleRuleActive(ruleId, active) {
+    try {
+      await apiFetch(`${API_BASE}/rules/${ruleId}/active?active=${active}`, { method: 'PATCH' });
+      loadStats();
+    } catch(e) { console.error(e); }
+  }
+
+  async function deleteRule(ruleId) {
+    if (!confirm(currentLang === 'kh' ? 'តើអ្នកប្រាកដជាចង់លុបច្បាប់នេះទេ?' : 'Delete this rule?')) return;
+    try {
+      await apiFetch(`${API_BASE}/rules/${ruleId}`, { method: 'DELETE' });
+      loadRules();
+      loadStats();
+    } catch(e) { console.error(e); }
+  }
+
+  // ---------- Section 04: Away / Default Rule ----------
+  async function loadDefaultRule() {
+    if (!userId) return;
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/default-rule`);
+      if (res.ok) {
+        const r = await res.json();
+        document.getElementById('defaultRuleActive').checked = !!r.active;
+        document.getElementById('defaultReplyText').value = r.reply_text || '';
+        document.getElementById('defaultReactionEmoji').value = r.reaction_emoji || '';
+        document.getElementById('defaultDelay').value = r.delay_seconds !== undefined ? r.delay_seconds : 0;
+        selectDefaultEmoji(r.reaction_emoji || '');
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  async function saveDefaultRule() {
+    if (!userId) return;
+    const active = document.getElementById('defaultRuleActive').checked;
+    const reply_text = document.getElementById('defaultReplyText').value.trim() || null;
+    const reaction_emoji = document.getElementById('defaultReactionEmoji').value.trim() || null;
+    const delay_seconds = parseInt(document.getElementById('defaultDelay').value) || 0;
+
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/default-rule`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active, reply_text, reaction_emoji, delay_seconds })
+      });
+      if (res.ok) {
+        alert(currentLang === 'kh' ? 'ការឆ្លើយ DM Away ត្រូវបានរក្សាទុកជោគជ័យ!' : 'DM Away reply saved successfully!');
+        loadStats();
+      } else {
+        alert('Failed to save default rule');
+      }
+    } catch(e) { alert(e.message); }
+  }
+
+  // ---------- Edit Rule Modal ----------
+  function openEditModal(rule) {
+    document.getElementById('editRuleId').value = rule.id;
+    document.getElementById('editTriggerType').value = rule.trigger_type;
+    document.getElementById('editTriggerValue').value = rule.trigger_value || '';
+    document.getElementById('editReplyText').value = rule.reply_text || '';
+    document.getElementById('editReactionEmoji').value = rule.reaction_emoji || '';
+    document.getElementById('editDelay').value = rule.delay_seconds !== undefined ? rule.delay_seconds : 0;
+    document.getElementById('editCooldown').value = rule.cooldown_seconds || 0;
+    onEditTriggerChange();
+    document.getElementById('editRuleModal').classList.add('active');
+  }
+
+  function closeEditModal() {
+    document.getElementById('editRuleModal').classList.remove('active');
+  }
+
+  function onEditTriggerChange() {
+    const t = document.getElementById('editTriggerType').value;
+    document.getElementById('editTriggerValueField').style.display = t === 'all' ? 'none' : 'block';
+  }
+
+  async function saveEditedRule() {
+    const ruleId = document.getElementById('editRuleId').value;
+    const trigger_type = document.getElementById('editTriggerType').value;
+    const trigger_value = trigger_type === 'all' ? null : document.getElementById('editTriggerValue').value.trim();
+    const reply_text = document.getElementById('editReplyText').value.trim() || null;
+    const reaction_emoji = document.getElementById('editReactionEmoji').value.trim() || null;
+    const delay_seconds = parseInt(document.getElementById('editDelay').value) || 0;
+    const cooldown_seconds = parseInt(document.getElementById('editCooldown').value) || 0;
+
+    try {
+      const res = await apiFetch(`${API_BASE}/rules/${ruleId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trigger_type, trigger_value, reply_text, reaction_emoji, delay_seconds, cooldown_seconds })
+      });
+      if (res.ok) {
+        closeEditModal();
+        loadRules();
+      } else {
+        alert('Failed to update rule');
+      }
+    } catch(e) { alert(e.message); }
+  }
+
+  // ---------- Simulator & Logs & Stats ----------
+  function updateSimChatOptions() {
+    const sel = document.getElementById('simChatSelect');
+    sel.innerHTML = `<option value="0" data-en="All Chats (Global)" data-kh="Chat ទាំងអស់ (ទូទៅ)">All Chats (Global)</option>`;
+    chats.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.chat_id;
+      opt.textContent = `${c.name || 'Chat ' + c.chat_id} (${c.is_group ? 'Group' : c.is_channel ? 'Channel' : 'DM'})`;
+      sel.appendChild(opt);
+    });
+  }
+
+  async function runSimulation() {
+    if (!userId) return;
+    const chat_id = parseInt(document.getElementById('simChatSelect').value) || 0;
+    const sender_id = parseInt(document.getElementById('simSenderId').value) || null;
+    const text = document.getElementById('simMessageText').value.trim();
+    const resEl = document.getElementById('simResult');
+    if (!text) { alert('Enter a test message'); return; }
+    resEl.innerHTML = `<span style="color:var(--text-dim);">${currentLang === 'kh' ? 'កំពុងតេស្ត…' : 'Simulating…'}</span>`;
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/simulate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id, sender_id, text })
+      });
+      const data = await res.json();
+      if (data.matched) {
+        resEl.innerHTML = `<div class="callout accent"><strong>✓ ${currentLang === 'kh' ? 'ត្រូវនឹងច្បាប់!' : 'Rule Matched!'}</strong><br>${escapeHtml(data.reply_text || '(Reaction only)')}</div>`;
+      } else {
+        resEl.innerHTML = `<div class="callout warning"><strong>✕ ${currentLang === 'kh' ? 'មិនត្រូវនឹងច្បាប់ណាទេ' : 'No rule matched.'}</strong></div>`;
+      }
+    } catch(e) { resEl.innerHTML = `<span style="color:var(--danger);">${e.message}</span>`; }
+  }
+
+  async function loadLogs() {
+    if (!userId) return;
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/logs`);
+      const logs = await res.json();
+      const el = document.getElementById('logsList');
+      if (!logs.length) {
+        el.innerHTML = `<div style="padding:10px 0;">${currentLang === 'kh' ? 'មិនទាន់មានកំណត់ត្រាការឆ្លើយតបនៅឡើយទេ។' : 'No replies logged yet.'}</div>`;
+        return;
+      }
+      el.innerHTML = logs.map(l => `
+        <div style="padding:8px 0; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between;">
+          <div><strong style="color:var(--text);">${escapeHtml(l.chat_name || 'Chat')}</strong>: <span style="color:var(--text-dim);">${escapeHtml(l.message_snippet)}</span></div>
+          <span style="font-size:11px; color:var(--text-dim);">${new Date(l.replied_at * 1000).toLocaleTimeString()}</span>
+        </div>
+      `).join('');
+    } catch(e) { console.error(e); }
+  }
+
+  async function loadStats() {
+    if (!userId) return;
+    try {
+      const res = await apiFetch(`${API_BASE}/users/${userId}/stats`);
+      const s = await res.json();
+      document.getElementById('statRules').textContent = s.active_rules_count || 0;
+      document.getElementById('statAway').textContent = s.away_reply_on ? 'ON' : 'OFF';
+    } catch(e) { console.error(e); }
+  }
+
+  // ---------- Admin User Tracking & Approval System ----------
+  async function loadAdminUsers() {
+    try {
+      const res = await apiFetch(`${API_BASE}/admin/users`);
+      if (!res.ok) throw new Error("Could not load admin stats");
+      const data = await res.json();
+      
+      const users = data.users || [];
+      document.getElementById('adminTotalUsers').textContent = data.total_users || users.length;
+      document.getElementById('adminTotalReplies').textContent = data.total_replies_sent || 0;
+      
+      let totalActive = 0;
+      users.forEach(u => { totalActive += (u.active_rules || 0); });
+      document.getElementById('adminActiveRules').textContent = totalActive;
+
+      const tbody = document.getElementById('adminTableBody');
+      if (!users.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-dim);">${currentLang === 'kh' ? 'មិនទាន់មានអ្នកប្រើប្រាស់ទេ' : 'No registered users yet.'}</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = users.map(u => {
+        const isApproved = u.is_approved !== 0;
+        const statusBadge = isApproved
+          ? `<span class="status-badge approved">✓ Approved</span>`
+          : `<span class="status-badge blocked">✕ Blocked</span>`;
+        const actionBtn = isApproved
+          ? `<button class="danger" style="font-size:11px; padding:3px 8px;" onclick="setUserApproval(${u.id}, false)">Block</button>`
+          : `<button class="secondary" style="font-size:11px; padding:3px 8px; color:var(--success); border-color:var(--success);" onclick="setUserApproval(${u.id}, true)">Approve</button>`;
+
+        return `
+          <tr>
+            <td><strong>${escapeHtml(u.display_name || 'Telegram User')}</strong></td>
+            <td>${escapeHtml(u.phone || '—')}</td>
+            <td style="font-size:12px; color:var(--text-dim);">${new Date(u.created_at * 1000).toLocaleDateString()}</td>
+            <td><span class="badge dm">${u.active_rules || 0}</span></td>
+            <td>${u.total_replies || 0}</td>
+            <td>${statusBadge}</td>
+            <td>${actionBtn}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch(e) {
+      console.error(e);
+      document.getElementById('adminTableBody').innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--danger);">${e.message}</td></tr>`;
+    }
+  }
+
+  async function setUserApproval(targetId, approve) {
+    try {
+      const res = await apiFetch(`${API_BASE}/admin/users/${targetId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_approved: approve })
+      });
+      if (res.ok) {
+        loadAdminUsers();
+      } else {
+        alert("Failed to update user approval status");
+      }
+    } catch(e) { alert(e.message); }
+  }
+
+  // Initial Boot
+  applyLang(currentLang);
+  checkAuth();
+</script>
+</body>
+</html>

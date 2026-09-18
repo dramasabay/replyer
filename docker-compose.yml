@@ -1,0 +1,32 @@
+services:
+  backend:
+    build: ./backend
+    container_name: replyer-backend
+    restart: unless-stopped
+    environment:
+      - ADMIN_PHONE=${ADMIN_PHONE}
+      - DATA_DIR=/app/data
+    volumes:
+      - backend_data:/app/data
+    networks:
+      - replyer_net
+    # Not published to the host — only the nginx/frontend container talks to
+    # it, over the internal docker network, at http://backend:8000.
+
+  frontend:
+    build: ./frontend
+    container_name: replyer-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8087:80"
+    networks:
+      - replyer_net
+
+networks:
+  replyer_net:
+    driver: bridge
+
+volumes:
+  backend_data:
