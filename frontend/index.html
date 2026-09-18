@@ -1610,7 +1610,51 @@
 </div>
 
 <script>
-  const API_BASE = "";
+  // Dynamically resolve backend API address:
+  // - If running on same port as FastAPI (e.g. 8000) or behind reverse proxy (80, 443, 8087), use ""
+  // - If running from a separate static server (e.g. 8080 from python -m http.server, 5500, 3000), target localhost:8000
+  // - If opened via file:// protocol, target localhost:8000
+  const API_BASE = (function() {
+    if (window.API_BASE_OVERRIDE) return window.API_BASE_OVERRIDE;
+    if (window.location.protocol === 'file:') return 'http://localhost:8000';
+    const port = window.location.port;
+    if (port && !['8000', '8087', '80', '443'].includes(port)) {
+      return `http://${window.location.hostname || 'localhost'}:8000`;
+    }
+    return '';
+  })();
+
+  // Robust response JSON parser that prevents "Unexpected token '<'" errors when server returns HTML error pages
+  async function safeParseJson(res) {
+    const contentType = (res.headers && res.headers.get('content-type')) || '';
+    if (!contentType.includes('application/json')) {
+      const text = await res.text();
+      if (!res.ok) {
+        if (res.status === 404) {
+          throw new Error(currentLang === 'kh'
+            ? `រកមិនឃើញសេវា API (HTTP 404)។ សូមប្រាកដថា FastAPI Backend កំពុងដំណើរការលើ port 8000។`
+            : `Backend API not found (HTTP 404). Ensure FastAPI backend is running at ${API_BASE || window.location.origin || 'http://localhost:8000'}`);
+        }
+        if (res.status === 502 || res.status === 503) {
+          throw new Error(currentLang === 'kh'
+            ? `មិនអាចភ្ជាប់ទៅកាន់ Backend Server បានទេ (HTTP ${res.status} Bad Gateway)។`
+            : `Cannot connect to backend server (HTTP ${res.status} Bad Gateway). Please ensure the backend is started.`);
+        }
+        throw new Error(currentLang === 'kh'
+          ? `ម៉ាស៊ីនបម្រើបានឆ្លើយតបកំហុស HTTP ${res.status}`
+          : `Server returned HTTP ${res.status} error.`);
+      }
+      try {
+        return JSON.parse(text);
+      } catch {
+        throw new Error(currentLang === 'kh'
+          ? `ការឆ្លើយតបពីម៉ាស៊ីនបម្រើមិនត្រឹមត្រូវ (មិនមែនជាទម្រង់ JSON)។`
+          : `Server returned non-JSON response (${res.status}).`);
+      }
+    }
+    return await res.json();
+  }
+
   let userId = null;
   let isAdmin = false;
   let authToken = localStorage.getItem('replyer-token') || null;
@@ -1664,7 +1708,15 @@
     if (authToken) {
       options.headers['Authorization'] = `Bearer ${authToken}`;
     }
-    const res = await fetch(url, options);
+    let res;
+    try {
+      res = await fetch(url, options);
+    } catch(err) {
+      console.error(`Network fetch failed for ${url}:`, err);
+      throw new Error(currentLang === 'kh'
+        ? `មិនអាចភ្ជាប់ទៅកាន់ Backend API (${API_BASE || 'http://localhost:8000'})។ សូមពិនិត្យមើលសេវាកម្ម backend។`
+        : `Cannot reach backend API at ${API_BASE || window.location.origin || 'http://localhost:8000'}. Make sure backend is running.`);
+    }
     if (res.status === 401) {
       // Session expired or token invalid
       setLoggedOut();
@@ -1817,14 +1869,27 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, api_id: parseInt(apiId), api_hash: apiHash }),
       });
-      const data = await res.json();
-      if (data.status === 'code_sent') {
+      const data = await safeParseJson(res);
+      if (res.ok && data.status === 'code_sent') {
         document.getElementById('verifyStep').style.display = 'block';
         msg.innerHTML = `<span style="color:var(--success);">${currentLang === 'kh' ? 'លេខកូដត្រូវបានផ្ញើទៅកាន់ Telegram របស់អ្នក' : 'Code sent to your Telegram app'}</span>`;
+        showToast(currentLang === 'kh' ? '✓ លេខកូដត្រូវបានផ្ញើទៅកាន់ Telegram' : '✓ Login code sent to your Telegram app', 'success');
       } else {
-        msg.innerHTML = `<span style="color:var(--danger);">${escapeHtml(data.detail || 'Failed')}</span>`;
+        const errorText = data.detail || data.message || 'Failed to send login code';
+        msg.innerHTML = `<span style="color:var(--danger);">${escapeHtml(errorText)}</span>`;
+        showToast(errorText, 'error');
       }
-    } catch(e) { msg.innerHTML = `<span style="color:var(--danger);">${e.message}</span>`; }
+    } catch(e) {
+      console.error("Login start error:", e);
+      let errMsg = e.message;
+      if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError')) {
+        errMsg = currentLang === 'kh'
+          ? `មិនអាចភ្ជាប់ទៅកាន់ Backend API (${API_BASE || 'http://localhost:8000'}) បានទេ។ សូមពិនិត្យមើលថាតើ backend កំពុងដំណើរការ។`
+          : `Failed to connect to backend at ${API_BASE || window.location.origin || 'http://localhost:8000'}. Make sure FastAPI backend is running (uvicorn main:app --port 8000).`;
+      }
+      msg.innerHTML = `<span style="color:var(--danger);">${escapeHtml(errMsg)}</span>`;
+      showToast(errMsg, 'error');
+    }
   }
 
   async function verifyLogin() {
@@ -1839,8 +1904,8 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, code, password }),
       });
-      const data = await res.json();
-      if (data.status === 'ok') {
+      const data = await safeParseJson(res);
+      if (res.ok && data.status === 'ok') {
         authToken = data.token || data.access_token;
         if (authToken) {
           localStorage.setItem('replyer-token', authToken);
@@ -1857,15 +1922,29 @@
         isAdmin = data.is_admin;
         setLoggedIn(userObj);
         goTo('auto');
+        showToast(currentLang === 'kh' ? '✓ ចូលប្រើប្រាស់ជោគជ័យ!' : '✓ Logged in successfully!', 'success');
         await loadChats();
         loadRules();
         loadDefaultRule();
         loadMentionRule();
+        loadScamShield();
         loadStats();
       } else {
-        msg.innerHTML = `<span style="color:var(--danger);">${escapeHtml(data.detail || 'Verification failed')}</span>`;
+        const errorText = data.detail || data.message || 'Verification failed';
+        msg.innerHTML = `<span style="color:var(--danger);">${escapeHtml(errorText)}</span>`;
+        showToast(errorText, 'error');
       }
-    } catch(e) { msg.innerHTML = `<span style="color:var(--danger);">${e.message}</span>`; }
+    } catch(e) {
+      console.error("Login verify error:", e);
+      let errMsg = e.message;
+      if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError')) {
+        errMsg = currentLang === 'kh'
+          ? `មិនអាចភ្ជាប់ទៅកាន់ Backend Server បានទេ។`
+          : `Failed to connect to backend server. Make sure backend is running.`;
+      }
+      msg.innerHTML = `<span style="color:var(--danger);">${escapeHtml(errMsg)}</span>`;
+      showToast(errMsg, 'error');
+    }
   }
 
   function logout() {

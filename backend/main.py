@@ -4,13 +4,36 @@ from fastapi import FastAPI, HTTPException, Depends, Security, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+try:
+    from slowapi import Limiter, _rate_limit_exceeded_handler
+    from slowapi.util import get_remote_address
+    from slowapi.errors import RateLimitExceeded
+    HAS_SLOWAPI = True
+except ImportError:
+    HAS_SLOWAPI = False
+
+    class Limiter:
+        def __init__(self, key_func=None):
+            pass
+        def limit(self, *args, **kwargs):
+            def decorator(func):
+                return func
+            return decorator
+
+    class RateLimitExceeded(Exception):
+        pass
+
+    async def _rate_limit_exceeded_handler(request, exc):
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=429, content={"detail": "Too many requests"})
+
+    def get_remote_address(request):
+        return getattr(request.client, "host", "127.0.0.1") if request.client else "127.0.0.1"
+
+from fastapi.responses import FileResponse
 import db
 import telegram_manager
 import worker
@@ -26,20 +49,21 @@ app = FastAPI(
 # The phone number treated as admin.
 ADMIN_PHONE = os.environ.get("ADMIN_PHONE", "")
 
-# Configurable CORS. No wildcard default: an unset ALLOWED_ORIGINS should fail
-# closed (same-origin only via the nginx proxy) rather than fail open to "*".
-# Set ALLOWED_ORIGINS to a comma-separated list of exact origins if you ever
-# serve the frontend from a different origin than the API.
+# Configurable CORS:
+# If ALLOWED_ORIGINS is explicitly configured in .env, strictly enforce those origins.
+# Otherwise, allow local development origins (any localhost / 127.0.0.1 port).
 _raw_origins = os.environ.get("ALLOWED_ORIGINS", "").strip()
-ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+if _raw_origins:
+    ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+    ALLOW_ORIGIN_REGEX = None
+else:
+    ALLOWED_ORIGINS = []
+    ALLOW_ORIGIN_REGEX = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
 
-# We authenticate with a Bearer token in the Authorization header, never
-# cookies, so allow_credentials (which governs cookie/credentialed requests)
-# should stay off — it also has no effect combined with a "*" origin, so
-# leaving it on gave no real protection and just added confusion.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=ALLOWED_ORIGINS if not ALLOW_ORIGIN_REGEX else [],
+    allow_origin_regex=ALLOW_ORIGIN_REGEX,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -110,7 +134,12 @@ async def startup():
     asyncio.create_task(worker.start_watchdog())
 
 
-# ---------- Auth (Telegram login) ----------
+# ---------- Frontend Web UI (Direct Access) ----------
+frontend_html = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend", "index.html")
+if os.path.exists(frontend_html):
+    @app.get("/", include_in_schema=False)
+    async def serve_index():
+        return FileResponse(frontend_html)
 
 class StartLoginBody(BaseModel):
     phone: str

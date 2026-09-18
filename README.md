@@ -12,7 +12,7 @@ https://my.telegram.org/apps — nothing to set up here for that part.
 ## 2. Install & configure the backend
 ```bash
 cd backend
-pip install fastapi uvicorn telethon python-multipart cryptography
+pip install -r requirements.txt
 
 export ADMIN_PHONE=+855xxxxxxxx   # your own phone number — logging in with this unlocks the Admin tab
 ```
@@ -24,25 +24,19 @@ python -c "from crypto_utils import generate_key; generate_key()"
 This creates `backend/secret.key`. **Back it up. Never commit it to git.**
 If you lose it, every saved session becomes unreadable and users must re-login.
 
-## 3. Run the backend
+## 3. Run the backend & Web UI
 ```bash
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
+Open **http://localhost:8000** in your browser to access the complete application!
+FastAPI now serves the full frontend directly from port 8000 without needing any extra web server.
 
-For production, run this behind a process manager (systemd, pm2, or
-`supervisord`) so it restarts automatically, and put it behind HTTPS
-(e.g. Caddy or nginx + Let's Encrypt) since it's carrying login codes and
-session data — never serve this over plain HTTP on the open internet.
-
-## 4. Serve the frontend
-The `frontend/index.html` is a static file. Serve it with anything:
+*(Optional)* If you prefer serving `frontend/index.html` via a separate static dev server:
 ```bash
 cd frontend
 python -m http.server 8080
 ```
-Or drop it behind your existing nginx/Caddy setup. If your backend isn't on
-`localhost:8000`, edit the `API_BASE` constant near the top of the `<script>`
-tag in `index.html`.
+Then open **http://localhost:8080** (API calls will automatically route to http://localhost:8000).
 
 ## 5. Try it end to end
 1. Open the frontend in a browser
