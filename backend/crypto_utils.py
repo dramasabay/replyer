@@ -30,8 +30,14 @@ def _load_key():
     if not os.path.exists(KEY_PATH):
         # auto-generate on first run so local dev "just works"
         generate_key()
-    with open(KEY_PATH, "rb") as f:
-        return f.read()
+    try:
+        with open(KEY_PATH, "rb") as f:
+            return f.read()
+    except PermissionError as e:
+        raise PermissionError(
+            f"Cannot read encryption key at {KEY_PATH}: permission denied. "
+            f"If running in Docker, ensure the file is owned by the container user (UID 1000)."
+        ) from e
 
 
 _fernet = None

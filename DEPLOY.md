@@ -133,6 +133,10 @@ docker run --rm -v replyer_backend_data:/data -v $(pwd):/backup alpine \
   if NPM runs on the same box, `localhost`/`127.0.0.1` access is enough and
   you can bind it there instead of `0.0.0.0` by changing the compose ports
   line to `"127.0.0.1:8087:80"` for extra safety.
+- **Volume Permissions**: The backend runs as non-root `appuser` (UID 1000). The container entrypoint automatically fixes ownership of `/app/data` on boot. If you restore a backup or copy files manually, ensure permissions are owned by UID 1000:
+  ```bash
+  docker compose run --rm --user 0 backend chown -R 1000:1000 /app/data
+  ```
 - **ToS reminder from the README still applies**: this automates personal
   Telegram accounts via Telethon, which is outside Telegram's bot-API terms.
   Hosting it behind Docker/NPM doesn't change that risk — keep reply volume
